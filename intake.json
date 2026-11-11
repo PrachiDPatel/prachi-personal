@@ -1,0 +1,185 @@
+{
+  "art": [
+    {
+      "alt": "Digital painting of a girl in profile with nightshade flowers, constellations and a crescent moon",
+      "file": "nightshade detail view.webp",
+      "latin": "Atropa belladonna",
+      "note": "digital painting"
+    },
+    {
+      "alt": "Digital portrait of a woman wearing a crown of golden plumeria flowers",
+      "file": "consumption 3.webp",
+      "latin": "Plumeria rubra",
+      "note": "digital painting"
+    },
+    {
+      "alt": "Whimsical painting of a pug-like creature with galaxy eyes and rainbow topographic petals",
+      "file": "pug.webp",
+      "latin": "Canis familiaris",
+      "note": "digital painting"
+    },
+    {
+      "alt": "Fluffy yellow duckling wearing a bright orange flower as a hat",
+      "file": "duck 2.webp",
+      "latin": "Anas platyrhynchos",
+      "note": "digital painting"
+    },
+    {
+      "alt": "Coiled snake with a pink lily growing from its back, green background",
+      "file": "snklily.webp",
+      "latin": "Pantherophis \u00d7 Lilium",
+      "note": "digital painting"
+    },
+    {
+      "alt": "Pencil sketch of a dragon with small celestial doodles",
+      "file": "celeste.webp",
+      "latin": "Draco celestis",
+      "note": "pencil sketch"
+    },
+    {
+      "alt": "Starry night sky with crescent moon, fireflies, pine silhouettes",
+      "file": "space.webp",
+      "latin": "Nox stellata",
+      "note": "digital painting"
+    },
+    {
+      "alt": "Stylized sunset over dark mountain peaks and teal waves",
+      "file": "beach mountian.webp",
+      "latin": "Sol occidens",
+      "note": "digital painting"
+    },
+    {
+      "alt": "Second study of the galaxy-eyed pug creature with rainbow petals",
+      "file": "pug2.webp",
+      "latin": "Canis familiaris, II",
+      "note": "digital painting"
+    }
+  ],
+  "brand_colors": [
+    "#0b1026",
+    "#e8b04b",
+    "#6f9a5e",
+    "#8b7bb8"
+  ],
+  "business_name": "Prachi Patel",
+  "color_scheme": "dark",
+  "colors_to_avoid": [
+    "rainbow palettes",
+    "neon",
+    "pure primary colors"
+  ],
+  "contact": [
+    {
+      "handle": "@PrachiDPatel",
+      "label": "GitHub",
+      "url": "https://github.com/PrachiDPatel"
+    },
+    {
+      "handle": "@bluehalite",
+      "label": "Instagram \u2014 art",
+      "url": "https://www.instagram.com/bluehalite/"
+    },
+    {
+      "handle": "@prachi__patel",
+      "label": "Instagram \u2014 personal",
+      "url": "https://www.instagram.com/prachi__patel/"
+    },
+    {
+      "handle": "/in/prachidp",
+      "label": "LinkedIn",
+      "url": "https://www.linkedin.com/in/prachidp"
+    }
+  ],
+  "crafts": [
+    {
+      "desc": "Rings, pendants, and piercing jewelry. Shaped by hand, fired in a kiln.",
+      "name": "silver-clay jewelry",
+      "tag": "silver clay \u00b7 kiln-fired"
+    },
+    {
+      "desc": "Thread and beads on fabric. Slow work, the good kind.",
+      "name": "embroidery & beadwork",
+      "tag": "thread \u00b7 beads"
+    },
+    {
+      "desc": "Sculpted fish, painted bright. One has LEDs inside and glows like a deep-sea signal.",
+      "name": "paper-mache fish",
+      "tag": "paper-mache \u00b7 LEDs"
+    },
+    {
+      "desc": "Essays and articles. Cosmic imagery, philosophical conceits, the occasional dark reversal.",
+      "name": "words",
+      "tag": "essays \u00b7 mysteries"
+    }
+  ],
+  "design_direction": "dark cosmic botanical",
+  "design_donts": [
+    "no split-screen hero",
+    "no light-mode sections",
+    "no emoji as iconography",
+    "no generic gradient hero",
+    "no sassy marketing copy",
+    "no linear portfolio sections",
+    "no AI-tell visuals"
+  ],
+  "notes": "Client is Prachi herself. Round 1 (hand-built, 2026-10-04, deleted) failed: she called it very buggy, AI-generated-looking, and said nothing in it interestingly reflected her personality. Round 2 (this Stem Cell run): a personality web of her interests \u2014 an interactive constellation graph where nodes are interests and edges encode real connections (fish->code via LED fish repo, geology->code via gneissvision, space->code via petrova-log). Structurally distinct from round 1 per her 30% retry rule.",
+  "repos": [
+    {
+      "blurb": "Stop taking manual screenshots to ask an AI about your screen. One click captures screenshot, page text, and console errors \u2014 copied as a bundle or sent straight to Claude with your own API key. No backend, no telemetry.",
+      "lang": "JavaScript",
+      "live": null,
+      "name": "lens"
+    },
+    {
+      "blurb": "My all-in-one health app \u2014 meds, labs, sleep, doctors, and everything in between. Built because my health data lived in six places and none of them talked to each other.",
+      "lang": "Python",
+      "live": null,
+      "name": "heliotrope"
+    },
+    {
+      "blurb": "A two-person letter-writing app themed after Project Hail Mary. One letter a day, 250 words minimum, sealed with wax. Static files, no backend.",
+      "lang": "HTML",
+      "live": "https://petrova-log.pages.dev",
+      "name": "petrova-log"
+    },
+    {
+      "blurb": "Staffing analytics for Code Ninjas, where I teach. Log sessions, see exactly how much money overstaffing wastes, export to CSV.",
+      "lang": "HTML",
+      "live": "https://prachidpatel.github.io/keiko/",
+      "name": "keiko"
+    },
+    {
+      "blurb": "Feed it a plane/cross-polarized thin-section image pair and Claude Vision identifies the mineral \u2014 with optical reasoning and confidence flags.",
+      "lang": "Python",
+      "live": null,
+      "name": "gneissvision"
+    },
+    {
+      "blurb": "A freelance website system: client intake form in, AI-generated static small-business site out. The constrained block library is the product.",
+      "lang": "system",
+      "live": null,
+      "name": "stem-cell"
+    },
+    {
+      "blurb": "A sleep tracker that talks to my Pleco \u2014 log the night and the lights follow. Iterated against my sleep doctor's guidance.",
+      "lang": "HTML",
+      "live": null,
+      "name": "sleep-tracker"
+    },
+    {
+      "blurb": "Playlist manager, early stage. Data model done; Spotify API integration next.",
+      "lang": "Python",
+      "live": null,
+      "name": "spotclean"
+    }
+  ],
+  "sections": [
+    "software",
+    "paintings",
+    "handmade",
+    "about",
+    "contact"
+  ],
+  "tagline": "engineer \u00b7 illustrator",
+  "concept": "personality web: full-viewport interactive constellation graph, 11 interest nodes, draggable, tap for detail panel"
+}

@@ -1,0 +1,3203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="mask-icon" href="safari-pinned-tab.svg" color="#9fd4f5">
+<meta name="theme-color" content="#062b35">
+<title>Prachi’s Portfolio</title>
+<meta name="description" content="Prachi Patel — about me, digital art, jewelry, fabric arts, photography, geology, writing, hire me, and tech projects on a true 3D celestial sphere at real J2000 positions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
+<style>
+@font-face{
+  font-family:'Insight Melody';
+  src:url('fonts/InsightMelody.otf') format('opentype');
+  font-weight:100 900;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:'Bigskate';
+  src:url('fonts/Bigskate.woff2') format('woff2');
+  font-weight:100 900;font-style:normal;font-display:swap;
+}
+:root{
+  --ground:#07222e;
+  --ink:#ece5d8;
+  --ink-dim:rgba(245,234,214,.55);
+  --ink-faint:rgba(245,234,214,.32);
+  --line:rgba(245,234,214,.13);
+  --gold:#a9d6f2;
+  --gold-dim:rgba(169,214,242,.28);
+  --serif:'Bigskate','Insight Melody',Georgia,serif;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sub:'Roboto',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);overflow:hidden;
+  -webkit-font-smoothing:antialiased;overscroll-behavior:none}
+::selection{background:var(--gold);color:#07222e}
+#sky{position:fixed;inset:0;display:block;touch-action:none}
+#vignette{position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 46%, rgba(0,0,0,0) 52%, rgba(3,12,17,.55) 100%)}
+
+/* ---------- 3D label overlay ---------- */
+#labels{position:fixed;inset:0;z-index:4;pointer-events:none;overflow:hidden}
+/* the zoomed-in constellation title (round 20, her call): on zoom the
+   figure's name + subheading leaves the sky and sits at the top of
+   the screen like a title — in the wordmark's own slot, top-left:
+   centered, it ran straight into "prachi patel" (round 20 QA). the
+   wordmark crossfades out as the title fades in. */
+#figtitle{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;
+  text-align:center;pointer-events:none;opacity:0;transition:opacity .45s ease;max-width:88vw}
+#figtitle.show{opacity:1}
+#figtitle .ft-nm{font-family:var(--serif);font-weight:800;font-size:2.8rem;line-height:1.1;
+  color:rgba(245,234,214,.97);text-shadow:0 2px 22px rgba(3,14,24,.9),0 0 4px rgba(3,14,24,.85);white-space:nowrap}
+#figtitle .ft-th{font-family:var(--sub);font-weight:600;font-size:13px;letter-spacing:2px;margin-top:5px;
+  color:rgba(191,226,255,1);text-shadow:0 1px 12px rgba(3,14,24,.9),0 0 3px rgba(3,14,24,.8);white-space:nowrap}
+/* the open night's glow (round 38, her ask): in the sleep tracker,
+   the night that's open breathes a periwinkle halo — cardPulse,
+   4s ease-in-out, swelling in rgba(169,196,244,...). the same
+   breathing, here on the name itself: a periwinkle text-shadow
+   halo that swells and settles around the glyphs, so the light
+   emanates from the title with the constellation centered behind
+   it. (first attempt was a radial-gradient disc behind the text;
+   it rendered as a dark edged plate over the sky — an emanating
+   glow can have no edge, so the glow lives on the letters.) */
+/* the glow behind the name (round 40, her words: "add a glow
+   behind it when zoomed to star, so we know it's the constellation
+   name and the stars look different"). twice-proven law of this
+   sky: any ELEMENT-shaped glow behind the title — a gradient disc,
+   a box-shadow cloud — renders as an edged oval plate over the
+   stars. the only edge-free glow is glyph-shaped: a strong
+   periwinkle text-shadow halo breathing on the open night's 4s
+   rhythm, so the light emanates from the name itself and the
+   nameplate reads as its own layer over the constellation. */
+#figtitle.show .ft-nm{animation:ftPulse 4s ease-in-out infinite}
+@keyframes ftPulse{
+  0%,100%{text-shadow:0 2px 22px rgba(3,14,24,.9),0 0 4px rgba(3,14,24,.85),0 0 22px rgba(169,196,244,.55),0 0 60px rgba(169,196,244,.32)}
+  50%{text-shadow:0 2px 22px rgba(3,14,24,.9),0 0 4px rgba(3,14,24,.85),0 0 34px rgba(169,196,244,.85),0 0 92px rgba(169,196,244,.50)}}
+#figtitle.show .ft-th{animation:thPulse 4s ease-in-out infinite}
+@keyframes thPulse{
+  0%,100%{text-shadow:0 1px 12px rgba(3,14,24,.9),0 0 12px rgba(169,196,244,.35)}
+  50%{text-shadow:0 1px 12px rgba(3,14,24,.9),0 0 20px rgba(169,196,244,.6)}}
+@media (prefers-reduced-motion: reduce){ #figtitle.show .ft-nm, #figtitle.show .ft-th{animation:none} }
+/* the title is DEAD CENTER now (round 37, her call) and her name
+   keeps the top-left slot — the wordmark no longer crossfades out
+   (the round-20 slot-sharing is retired). round 38: the figure
+   centers behind its name (the offset-framing experiment is
+   retired at her word — "it should be centered"), the title
+   engages only at a truly centered view, and the open-night glow
+   above carries the name over the stars at its heart. */
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-50%);text-align:center;
+  text-shadow:0 1px 8px rgba(0,0,0,.9),0 0 2px rgba(0,0,0,.9);white-space:nowrap;
+  transition:opacity .28s ease}
+.lbl .nm{font-family:var(--serif);font-weight:800;font-style:italic;color:rgba(245,234,214,.95);line-height:1.25}
+.lbl .th{font-family:var(--sub);font-weight:600;font-size:11px;letter-spacing:1.5px;color:rgba(191,226,255,.96);margin-top:3px}
+.lbl.mini .th{display:none}
+.lbl.mini .nm{font-size:18px !important}
+.lbl.mid .nm{font-size:20px !important}
+.lbl.mid .th{letter-spacing:.8px;margin-top:2px}
+.cap{position:absolute;left:0;top:0;transform:translate(-50%,-50%);text-align:center;white-space:nowrap;
+  text-shadow:0 1px 8px rgba(0,0,0,.9);pointer-events:none;
+  transition:opacity .28s ease}
+.cap .cn{font-family:var(--serif);font-weight:800;font-size:22px;letter-spacing:.02em;color:rgba(245,234,214,.92)}
+.cap .cs{font-family:var(--sub);font-weight:600;font-size:14px;color:rgba(191,226,255,.98);line-height:1.4;margin-top:3px}
+.cap.dim .cn{color:rgba(245,234,214,.34)}
+.cap.dim .cs{color:rgba(245,234,214,.3)}
+
+/* ---------- pleiades cursor (desktop only) ---------- */
+#cursor{position:fixed;left:0;top:0;width:132px;height:132px;z-index:50;pointer-events:none;
+  opacity:0;will-change:transform,opacity}
+@media (hover:hover) and (pointer:fine){
+  #sky{cursor:none}
+}
+
+/* ---------- chrome ---------- */
+.chrome{position:fixed;inset:0;z-index:5;pointer-events:none;
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:calc(1rem + env(safe-area-inset-top)) 1.4rem calc(1rem + env(safe-area-inset-bottom))}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+.wordmark{font-family:var(--serif);font-weight:800;font-size:2.3rem;letter-spacing:.01em;line-height:1.1;transition:opacity .45s ease}
+.wordmark small{display:block;font-family:var(--sans);font-weight:600;font-size:.62rem;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--ink-dim);margin-top:.4rem}
+.topright{display:flex;gap:.6rem;align-items:center;pointer-events:auto}
+.toplinks{display:flex;gap:1rem;align-items:center}
+.toplinks a{font-family:var(--sans);font-weight:600;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-dim);text-decoration:none;padding:.6rem .2rem;transition:color .2s}
+.toplinks a:hover{color:var(--gold)}
+#polarislink{color:var(--gold)}
+/* (the menu/log pills are gone — round 26, her call. the sheet and
+   the observer's log remain in the code below, dormant, until she
+   decides whether they get a new door or go entirely.) */
+#zoomctl{position:fixed;z-index:6;left:1.2rem;bottom:calc(9.4rem + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;gap:.5rem}
+#zoomctl button{width:44px;height:44px;border-radius:50%;
+  /* liquid glass (round 26, her call): bright translucent body, real
+     backdrop blur + saturation, a specular top edge and a soft inner
+     glow — light bends through it instead of sitting on a dark disc */
+  background:linear-gradient(135deg, rgba(205,232,255,.26), rgba(150,200,240,.10) 55%, rgba(255,255,255,.06));
+  backdrop-filter:blur(14px) saturate(170%);-webkit-backdrop-filter:blur(14px) saturate(170%);
+  border:1px solid rgba(255,255,255,.38);color:#eaf6ff;
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.55), inset 0 -6px 12px rgba(255,255,255,.08), 0 10px 24px rgba(2,16,26,.35);
+  font-family:var(--sans);font-size:1.15rem;cursor:pointer;transition:border-color .2s,background .2s}
+#zoomctl button:hover{border-color:rgba(255,255,255,.65)}
+/* ---------- menu ---------- */
+.menu-sec{margin-bottom:1.6rem}
+.menu-sec>h3{font-family:var(--sans);font-size:.72rem;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:.35rem}
+.menu-item{display:flex;justify-content:space-between;align-items:center;gap:1rem;width:100%;
+  background:none;border:0;border-bottom:1px solid var(--line);padding:.8rem .1rem;
+  min-height:48px;cursor:pointer;color:var(--ink);font-family:var(--sans);text-align:left}
+.menu-item .mn{font-weight:600;font-size:1.02rem}
+.menu-item .ms{font-family:var(--sub);font-size:.66rem;color:var(--ink-dim);
+  letter-spacing:.08em;text-transform:uppercase;text-align:right;white-space:nowrap}
+.menu-item:hover .mn,.menu-item:active .mn{color:var(--gold)}
+.menu-note{font-family:var(--sans);font-size:.85rem;line-height:1.7;color:var(--ink-dim);
+  margin-bottom:1.6rem}
+.bottombar{display:flex;flex-direction:column;align-items:center;gap:.5rem}
+.tonight{font-family:var(--sans);font-size:.62rem;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:rgba(169,214,242,.78);text-align:center;transition:opacity .4s ease}
+body.howto-open .tonight{opacity:0} /* the card carries the tonight line while it's up — one home per fact */
+/* the how-to card (round 37, her call): a cute, dismissible
+   welcome that teaches the sky, then gets out of the way until the
+   "?" in the zoom stack calls it back — and the "?" glows when a
+   visitor's swipes say they're lost. */
+#howto{position:fixed;left:50%;top:50%;transform:translate(-50%,calc(-50% + 14px));
+  width:min(94vw,340px);z-index:12;opacity:0;pointer-events:none;transition:opacity .5s ease,transform .5s ease;
+  border-radius:20px;padding:1.05rem 1.2rem .95rem;text-align:left;
+  color:rgba(234,246,255,.92);font-family:var(--sans);
+  background:linear-gradient(150deg, rgba(16,44,64,.84), rgba(7,26,40,.88));
+  border:1px solid rgba(255,255,255,.30);
+  backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.35), 0 18px 40px rgba(1,10,18,.5)}
+/* centered on the screen (round 40, her call) and wearing the open
+   night's glow verbatim: in the sleep tracker the expanded night
+   card breathes cardPulse — border rgba(169,196,244,.65), shadow
+   swelling 0 0 16px -2px rgba(169,196,244,.5) to 0 0 36px 2px
+   rgba(169,196,244,.8) over 4s. the same pulse emanates here, the
+   card's own resting shadows carried inside the keyframes. */
+#howto.show{opacity:1;transform:translate(-50%,-50%);pointer-events:auto;
+  border-color:rgba(169,196,244,.65);animation:cardPulse 4s ease-in-out infinite}
+@keyframes cardPulse{
+  0%,100%{box-shadow:inset 0 1px 1px rgba(255,255,255,.35), 0 18px 40px rgba(1,10,18,.5), 0 0 16px -2px rgba(169,196,244,.5)}
+  50%{box-shadow:inset 0 1px 1px rgba(255,255,255,.35), 0 18px 40px rgba(1,10,18,.5), 0 0 36px 2px rgba(169,196,244,.8)}}
+@media (prefers-reduced-motion: reduce){
+  #howto.show{animation:none;box-shadow:inset 0 1px 1px rgba(255,255,255,.35), 0 18px 40px rgba(1,10,18,.5), 0 0 24px 0 rgba(169,196,244,.6)}
+}
+/* the open night's escaping stars (round 41, her ask — "where's
+   the stars escaping like in sleep tracker?"): the glow was only
+   half the sleep tracker's effect. the open card there also sheds
+   glimmery stars that drift out of it in all directions: ✦ spans
+   around the rim, each on its own outward vector, flaring,
+   twinkling and fading on a 3.8s cycle. ported whole — same
+   keyframes, same colour, same text-shadow. */
+#howto .glimmer{position:absolute;color:#d7e5fc;line-height:1;pointer-events:none;opacity:0;
+  text-shadow:0 0 8px rgba(169,196,244,.95), 0 0 2px rgba(255,255,255,.85)}
+#howto.show .glimmer{animation:glimmerDrift 3.8s ease-out infinite}
+@keyframes glimmerDrift{
+  0%{opacity:0;transform:translate(0,0) scale(.4)}
+  20%{opacity:var(--peak,.9);transform:translate(calc(var(--dx,0px)*.35),calc(var(--dy,-12px)*.35)) scale(1.15)}
+  55%{opacity:calc(var(--peak,.9)*.5);transform:translate(calc(var(--dx,0px)*.7),calc(var(--dy,-12px)*.7)) scale(.8)}
+  80%{opacity:var(--peak,.9);transform:translate(calc(var(--dx,0px)*.9),calc(var(--dy,-12px)*.9)) scale(1.05)}
+  100%{opacity:0;transform:translate(var(--dx,0px),var(--dy,-12px)) scale(.5)}}
+@media (prefers-reduced-motion: reduce){ #howto.show .glimmer{animation:none} }
+#howto h2{font-family:var(--serif);font-weight:800;font-size:1.45rem;line-height:1.1;
+  color:rgba(245,234,214,.97);margin:0 0 .55rem}
+#howto h2 .sp{color:#9fd4f5}
+#howto ul{list-style:none;margin:0;padding:0}
+#howto li{font-size:.86rem;line-height:1.45;padding:.17rem 0;color:rgba(234,246,255,.85)}
+#howto li .sp{color:#9fd4f5;margin-right:.5rem}
+#howto li b{color:#bfe3ff;font-weight:600}
+#howtoTonight{margin-top:.6rem;padding-top:.55rem;border-top:1px solid rgba(255,255,255,.14);
+  font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(169,214,242,.85)}
+#howtox{position:absolute;top:.55rem;right:.55rem;width:30px;height:30px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.30);background:rgba(255,255,255,.08);
+  color:rgba(234,246,255,.85);font-family:var(--sans);font-size:.7rem;cursor:pointer;
+  transition:border-color .2s,color .2s}
+#howtox:hover{border-color:rgba(255,255,255,.6);color:#fff}
+@keyframes helpPulse{0%,100%{box-shadow:0 0 10px 2px rgba(159,212,245,.45)}
+  50%{box-shadow:0 0 0 6px rgba(159,212,245,.12),0 0 24px 9px rgba(159,212,245,.8)}}
+#helpbtn.glow{animation:helpPulse 1.6s ease-in-out infinite;border-color:rgba(191,227,255,.95);color:#fff}
+@media (prefers-reduced-motion: reduce){
+  #helpbtn.glow{animation:none;box-shadow:0 0 18px 6px rgba(159,212,245,.7)}
+}
+.microline{font-family:var(--sans);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(245,234,214,.22);text-align:center}
+@media(max-width:640px){
+  .topbar{flex-wrap:wrap;row-gap:.5rem}
+  .topright{flex-wrap:wrap;justify-content:flex-end;row-gap:.45rem}
+  .toplinks{order:3;flex-basis:100%;justify-content:flex-end;gap:1.1rem}
+  .toplinks a{font-size:.66rem}
+  .wordmark{font-size:1.7rem}
+  #figtitle .ft-nm{font-size:2.2rem}
+  .wordmark small{font-size:.52rem;letter-spacing:.16em;white-space:nowrap}
+    #zoomctl{left:1rem}
+  .microline{left:6.4rem;right:1rem;transform:none;text-align:left}
+  .lbl .nm{line-height:1.2}
+}
+
+/* ---------- panels ---------- */
+.panel{position:fixed;z-index:20;top:0;right:0;bottom:0;width:min(400px,92vw);
+  background:rgba(6,24,32,.94);backdrop-filter:blur(14px);
+  border-left:1px solid var(--line);
+  transform:translateX(102%);transition:transform .45s cubic-bezier(.22,.9,.3,1);
+  display:flex;flex-direction:column;color:var(--ink)}
+.panel.open{transform:none}
+.panel::before{content:"";display:block;height:3px;background:var(--gold);
+  box-shadow:0 0 18px rgba(169,214,242,.5)}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;
+  padding:1.4rem 1.5rem 1rem}
+.eyebrow{font-family:var(--sans);font-weight:700;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:.6rem}
+.panel-title{font-family:var(--serif);font-weight:900;font-size:2.5rem;line-height:1.15;letter-spacing:0}
+.pclose{flex:0 0 44px;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);
+  background:transparent;color:var(--ink-dim);font-size:1rem;cursor:pointer;font-family:var(--sans);
+  transition:border-color .2s,color .2s}
+.pclose:hover{border-color:var(--gold);color:var(--gold)}
+.panel-body{padding:0 1.5rem 1.6rem;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1}
+.panel-body>p.desig{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;color:var(--gold);
+  margin:0 0 1rem;text-transform:lowercase}
+.panel-body>p.lede{font-family:var(--sans);font-weight:400;font-size:1.08rem;line-height:1.8;
+  color:var(--ink);margin-bottom:1.1rem}
+.panel-body>p.more{font-family:var(--mono);font-size:.8rem;letter-spacing:.06em;
+  color:var(--ink-dim);margin:0 0 1rem}
+.plinks{display:flex;flex-direction:column;margin-top:1.2rem;border-top:1px solid var(--line)}
+.plinks a{display:flex;justify-content:space-between;align-items:center;text-decoration:none;
+  padding:.95rem .1rem;border-bottom:1px solid var(--line);min-height:44px;color:var(--ink)}
+.plinks .n{font-family:var(--sans);font-weight:700;font-size:1.15rem}
+.plinks .h{font-family:var(--mono);font-size:.7rem;color:var(--ink-dim);text-align:right}
+.plinks a:hover .n{color:var(--gold)}
+@media(max-width:760px){
+  .panel{top:auto;left:0;right:0;bottom:0;width:auto;max-height:74svh;border-left:0;
+    border-top:1px solid var(--line);border-radius:18px 18px 0 0;
+    transform:translateY(103%)}
+  .panel.open{transform:none}
+}
+
+/* facts */
+.facts{margin:0 0 1.1rem;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.fact{display:flex;justify-content:space-between;gap:1rem;padding:.68rem .95rem;
+  font-family:var(--sans);font-size:.8rem;border-bottom:1px solid var(--line)}
+.fact:last-child{border-bottom:0}
+.fact .k{color:var(--ink-dim);white-space:nowrap}
+.fact .v{text-align:right;color:var(--ink)}
+
+/* repo card */
+.repo{border:1px solid var(--line);border-radius:12px;padding:.95rem 1.05rem;margin-bottom:.7rem;
+  background:rgba(255,255,255,.02)}
+.repo-top{display:flex;justify-content:space-between;align-items:center;gap:.8rem;margin-bottom:.4rem}
+.repo-name{font-family:var(--sans);font-size:1rem;font-weight:700;white-space:nowrap}
+.repo-name .at{color:var(--gold)}
+.repo-lang{font-family:var(--sans);font-size:.72rem;color:var(--ink-dim);display:flex;align-items:center;
+  gap:.4rem;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%}
+.repo p{font-family:var(--sans);font-weight:400;font-size:1rem;line-height:1.75;color:rgba(245,234,214,.88)}
+.repo-links{display:flex;gap:1.1rem;margin-top:.55rem}
+.repo-links a{font-family:var(--sans);font-weight:600;font-size:.78rem;color:var(--gold);text-decoration:none;
+  padding:.4rem 0;letter-spacing:.06em}
+.repo-links a:hover{text-decoration:underline}
+
+/* observer's log */
+.logentry{margin-bottom:1.5rem}
+.logentry h3{font-family:var(--sans);font-size:1.05rem;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:.55rem}
+.logentry h3 .sub{color:var(--ink-dim);letter-spacing:.14em}
+.logentry p{font-family:var(--sans);font-weight:400;font-size:1rem;line-height:1.85;color:var(--ink);margin-bottom:.7rem}
+.logentry p.dim{color:var(--ink-dim);font-size:.88rem}
+.logsign{font-family:var(--serif);font-style:italic;font-weight:600;font-size:1.5rem;color:var(--ink-dim);
+  margin-top:1.8rem}
+
+/* lightbox */
+.lightbox{position:fixed;inset:0;z-index:60;background:rgba(3,14,19,.94);display:none;
+  align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(10px)}
+.lightbox.open{display:flex}
+.lightbox figure{max-width:min(92vw,860px);text-align:center}
+.lightbox img{max-width:100%;max-height:76svh;border-radius:12px;border:1px solid var(--line)}
+.lightbox figcaption{margin-top:.9rem;font-family:var(--sans);font-weight:500;font-size:1.05rem;line-height:1.6;color:var(--ink)}
+.lightbox .x{position:absolute;top:1.1rem;right:1.3rem;width:44px;height:44px;border-radius:50%;
+  border:1px solid var(--line);background:transparent;color:var(--ink);font-size:1.05rem;cursor:pointer;
+  font-family:var(--sans)}
+.lightbox .x:hover{border-color:var(--gold);color:var(--gold)}
+
+/* a11y node list */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.sr button{display:block}
+/* ---------- the boot loader: rounds 42/43 were an eclipse and
+   round 45 a star cluster; round 46 (her word: "just steal from
+   sleep tracker") replaces the theatre with Nightshade's own
+   Set and Rise scene, looping. The progress machinery underneath
+   is the round-42 machine plus round-46 honesty fixes. ----------
+   The sky loads behind a total eclipse. At totality the corona
+   burns, a prismatic halo rings it, and stars stand around it in
+   the darkened sky. Loading walks the egress: the moon drifts off,
+   Baily's beads string along its limb, the diamond ring blazes,
+   and the loader lifts on first light. Progress is real (the
+   background texture's bytes, the fonts, the first frame). */
+#boot{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;overflow:hidden;background:radial-gradient(120% 92% at 50% 42%, #0a2e3d 0%, #06222f 46%, #03141c 100%);transition:opacity 1s ease}
+#boot.lift{opacity:0;pointer-events:none}
+#bootStars{position:absolute;inset:0;pointer-events:none}
+.bgstar{position:absolute;border-radius:50%;background:#dceaff;box-shadow:0 0 6px 1px rgba(190,215,255,.85);animation:bgTw 2.8s ease-in-out infinite alternate}
+.bgstar.g{border-radius:0;background:none;box-shadow:none;color:#cfe4ff;text-shadow:0 0 9px rgba(169,196,244,.9);line-height:1}
+@keyframes bgTw{from{opacity:.25;transform:scale(.7)}to{opacity:1;transform:scale(1.15)}}
+/* Set and Rise loader, stolen from Nightshade (the sleep tracker) at
+   her word (round 46): sun sets over a lake horizon, moon rises, stars
+   come out. Hers runs one 3.2s pass; here it loops while the sky loads.
+   The moon maria there are a 176 KB vector file; at 44 px this disc is
+   a CSS shade in the same tones instead (see .moon-art below). */
+#boot .boot-stage { position: relative; width: 160px; height: 160px; }
+#boot .boot-horizon { position: absolute; left: 12px; right: 12px; bottom: 48px; height: 12px;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='12' viewBox='0 0 120 12'><path d='M0 6 Q15 1 30 6 T60 6 T90 6 T120 6' fill='none' stroke='%237d92bd' stroke-width='1.6' stroke-linecap='round'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='90' height='12' viewBox='0 0 90 12'><path d='M0 8 Q11.25 4 22.5 8 T45 8 T67.5 8 T90 8' fill='none' stroke='%235a6f9e' stroke-width='1.2' stroke-linecap='round' opacity='.55'/></svg>");
+  background-repeat: repeat-x;
+  background-size: 120px 12px, 90px 12px;
+  background-position: 0 1px, 0 5px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+  opacity: .85;
+  animation: bootWaveDrift 7s linear infinite; }
+@keyframes bootWaveDrift {
+  from { background-position: 0 1px, 0 5px; }
+  to { background-position: 120px 1px, 90px 5px; }
+}
+/* minimalist lake: still water below the waterline, catching a faint reflection
+   of whichever light is up — warm while the sun sets, cool while the moon rises */
+#boot .boot-lake { position: absolute; left: 12px; right: 12px; bottom: 24px; height: 24px;
+  background: linear-gradient(180deg, rgba(110,140,200,.12), rgba(110,140,200,.05) 55%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); }
+#boot .boot-glint { position: absolute; left: 50%; bottom: 41px; width: 46px; height: 10px; margin-left: -23px;
+  border-radius: 50%; filter: blur(5px); }
+/* two separate reflections so the colors never mix: warm tracks the sun's apex,
+   cool tracks the moon's — yellow is fully faded out while the moon is up */
+#boot .boot-glint-sun { background-color: #ffc57a;
+  animation: bootGlintSun 3.2s ease-in-out infinite, bootShimmer 2.3s ease-in-out infinite; }
+#boot .boot-glint-moon { background-color: #a9c0ea; opacity: 0;
+  animation: bootGlintMoon 3.2s ease-in-out infinite, bootShimmer 2.3s ease-in-out infinite; }
+@keyframes bootGlintSun {
+  0%, 34% { opacity: .8; transform: scaleX(1); }
+  38% { opacity: .55; transform: scaleX(1.3); }
+  44%, 58% { opacity: 0; transform: scaleX(.85); }
+  90%, 100% { opacity: .8; transform: scaleX(1); }
+}
+@keyframes bootGlintMoon {
+  0%, 38% { opacity: 0; transform: scaleX(.85); }
+  44%, 58% { opacity: .8; transform: scaleX(1); }
+  64%, 100% { opacity: 0; transform: scaleX(.85); }
+}
+@keyframes bootShimmer { 0%, 100% { translate: -5px 0; } 50% { translate: 5px 0; } }
+#boot .boot-sun { position: absolute; left: 50%; bottom: 52px; width: 56px; height: 56px; margin: 0 0 0 -28px;
+  animation: bootSet 3.2s ease-in-out infinite; }
+#boot .boot-sun svg { width: 100%; height: 100%; display: block;
+  filter: drop-shadow(0 0 12px rgba(255,190,90,.7)) drop-shadow(0 0 28px rgba(255,150,60,.35)); }
+#boot .boot-moon { position: absolute; left: 50%; bottom: 52px; width: 44px; height: 44px; margin: 0 0 0 -22px;
+  border-radius: 50%; overflow: hidden; animation: bootRise 3.2s ease-in-out infinite;
+  box-shadow: 0 0 18px 6px rgba(190,210,255,.35); }
+#boot .boot-moon .moon-art { position: absolute; inset: 0; }
+#boot .boot-star { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #cfe0ff;
+  animation: bootTwinkle 3.2s ease-in-out infinite; }
+#boot .boot-text { margin-top: 18px; font-size: 13px; letter-spacing: .28em; text-transform: uppercase;
+  color: #8a97b5; font-weight: 600; }
+#boot .boot-wrap { display: flex; flex-direction: column; align-items: center; }
+@keyframes bootSet { 0%, 100% { transform: translateY(-58px); opacity: 1; } 42%, 58% { transform: translateY(8px); opacity: 0; } }
+@keyframes bootRise { 0%, 100% { transform: translateY(8px); opacity: 0; } 42%, 58% { transform: translateY(-64px); opacity: 1; } }
+@keyframes bootTwinkle { 0%, 38%, 100% { opacity: 0; transform: scale(.6); } 48%, 62% { opacity: 1; transform: scale(1); } }
+#boot .boot-moon .moon-art { border-radius: 50%;
+  background:
+    radial-gradient(circle at 63% 30%, rgba(140,150,170,.35) 0%, rgba(140,150,170,.35) 9%, rgba(140,150,170,0) 17%),
+    radial-gradient(circle at 38% 52%, rgba(140,150,170,.30) 0%, rgba(140,150,170,.30) 13%, rgba(140,150,170,0) 23%),
+    radial-gradient(circle at 58% 68%, rgba(140,150,170,.26) 0%, rgba(140,150,170,.26) 8%, rgba(140,150,170,0) 16%),
+    radial-gradient(circle at 30% 26%, rgba(140,150,170,.22) 0%, rgba(140,150,170,.22) 6%, rgba(140,150,170,0) 12%),
+    radial-gradient(circle at 42% 38%, #fbfaf5 0%, #f1efe6 55%, #dde2ec 100%); }
+
+.boot-sub{display:flex;gap:14px;align-items:baseline;font-family:Roboto,system-ui,sans-serif;font-size:11px;letter-spacing:.34em;color:#a9c8e8}
+#bootPhase{text-transform:lowercase}
+.boot-pct{font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;font-size:12px;color:#e6f2ff;text-transform:none}
+@media (prefers-reduced-motion: reduce){
+  .bgstar{animation:none}
+  #boot .boot-sun, #boot .boot-glint-sun{display:none}
+  #boot .boot-moon{animation:none;transform:translateY(-64px);opacity:1}
+  #boot .boot-glint-moon{animation:none;opacity:.8}
+  #boot .boot-horizon, #boot .boot-glint{animation:none}
+  #boot{transition-duration:.3s}
+}
+
+</style>
+</head>
+<body>
+
+<div id="boot" role="status" aria-label="Loading the sky">
+  <div id="bootStars" aria-hidden="true"></div>
+  <div class="boot-stage" id="bootStage" aria-hidden="true">
+    <div class="boot-star" style="left:28px;top:22px"></div>
+    <div class="boot-star" style="left:118px;top:30px;animation-delay:.5s"></div>
+    <div class="boot-star" style="left:80px;top:12px;animation-delay:1s"></div>
+    <div class="boot-star" style="left:48px;top:44px;animation-delay:1.4s"></div>
+    <div class="boot-horizon"></div>
+    <div class="boot-lake"></div>
+    <div class="boot-glint boot-glint-sun"></div>
+    <div class="boot-glint boot-glint-moon"></div>
+    <div class="boot-sun"><svg viewBox="0 0 56 56"><defs>
+<radialGradient id="bsunCore" cx="42%" cy="38%" r="65%">
+<stop offset="0%" stop-color="#fffbe8"/><stop offset="45%" stop-color="#ffe9a8"/>
+<stop offset="80%" stop-color="#ffb84d"/><stop offset="100%" stop-color="#ff9a3d"/>
+</radialGradient></defs>
+<g stroke="#ffcf7a" stroke-linecap="round" opacity=".9">
+<line x1="28" y1="2" x2="28" y2="10" stroke-width="2.5"/>
+<line x1="28" y1="46" x2="28" y2="54" stroke-width="2.5"/>
+<line x1="2" y1="28" x2="10" y2="28" stroke-width="2.5"/>
+<line x1="46" y1="28" x2="54" y2="28" stroke-width="2.5"/>
+<line x1="9.6" y1="9.6" x2="15.3" y2="15.3" stroke-width="2"/>
+<line x1="40.7" y1="40.7" x2="46.4" y2="46.4" stroke-width="2"/>
+<line x1="46.4" y1="9.6" x2="40.7" y2="15.3" stroke-width="2"/>
+<line x1="15.3" y1="40.7" x2="9.6" y2="46.4" stroke-width="2"/>
+</g>
+<circle cx="28" cy="28" r="14" fill="url(#bsunCore)"/>
+</svg></div>
+    <div class="boot-moon"><div class="moon-art"></div></div>
+  </div>
+  <div class="boot-sub"><span id="bootPhase">loading</span><span class="boot-pct" id="bootPct">0%</span></div>
+</div>
+<script>
+/* the boot state machine (round 42 machinery; round 46 theatre
+   and honesty fixes).
+   Classic script, runs
+   before the module: the module reports texture bytes, fonts and
+   the first frame; this owns the theatre and the reveal. A 15 s
+   failsafe fails over — the sky is never held hostage. */
+(function () {
+  var boot = document.getElementById('boot');
+  var starsWrap = document.getElementById('bootStars');
+  var stage = document.getElementById('bootStage');
+  var phaseEl = document.getElementById('bootPhase');
+  var pctEl = document.getElementById('bootPct');
+  var RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* stars around the eclipse, standing in the darkened sky */
+  var STARPOS = [[10,16,2],[20,34,2],[8,58,2],[16,84,2],[30,10,2],[70,12,2],[84,22,2],[90,52,2],[86,80,2],[72,92,2],[42,94,2],[58,6,2]];
+  for (var si = 0; si < STARPOS.length; si++) {
+    var sp = document.createElement('span');
+    sp.className = 'bgstar';
+    sp.style.left = STARPOS[si][0] + '%'; sp.style.top = STARPOS[si][1] + '%';
+    var sz = STARPOS[si][2];
+    sp.style.width = sz + 'px'; sp.style.height = sz + 'px';
+    sp.style.animationDelay = (si * 0.37) + 's';
+    starsWrap.appendChild(sp);
+  }
+  [[24,24],[80,36]].forEach(function (gp, gi) {
+    var g = document.createElement('span');
+    g.className = 'bgstar g'; g.textContent = '\u2726';
+    g.style.left = gp[0] + '%'; g.style.top = gp[1] + '%';
+    g.style.fontSize = '9px';
+    g.style.animationDelay = (gi * 0.9 + 0.4) + 's';
+    starsWrap.appendChild(g);
+  });
+
+  var parts = { tex: 0, fonts: 0, frame: 0 };
+  var real = 0, dp = 0, pinned = null, doneFlag = false, finishing = false;
+  var cbs = [], t0 = performance.now(), lastT = t0;
+  var lastReal = 0, lastRealT = t0;
+  function computeReal() {
+    real = parts.tex * 0.78 + parts.fonts * 0.10 + parts.frame * 0.12;
+    if (parts.tex >= 1 && parts.fonts && parts.frame) real = 1;
+  }
+  window.BOOT = {
+    setTex: function (f) { parts.tex = Math.max(parts.tex, Math.min(1, f || 0)); computeReal(); },
+    done: function (k) { if (k === 'tex') parts.tex = 1; else parts[k] = 1; computeReal(); },
+    then: function (cb) { if (doneFlag) cb(); else cbs.push(cb); },
+    pin: function (f, snap) { pinned = f; if (snap && f != null) dp = f; },
+    state: function () {
+      return { real: +real.toFixed(3), shown: +dp.toFixed(3),
+        parts: { tex: +parts.tex.toFixed(2), fonts: parts.fonts, frame: parts.frame },
+        done: doneFlag, phase: phaseEl.textContent };
+    }
+  };
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { BOOT.done('fonts'); });
+  setTimeout(function () { parts.tex = 1; parts.fonts = 1; parts.frame = 1; computeReal(); }, 15000);
+
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function smooth(a, b, v) { var t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); }
+  function lift() {
+    doneFlag = true;
+    boot.classList.add('lift');
+    for (var i = 0; i < cbs.length; i++) cbs[i]();
+    setTimeout(function () { if (boot.parentNode) boot.parentNode.removeChild(boot); }, 1150);
+  }
+  function frame(now) {
+    var dt = Math.min(100, now - lastT); lastT = now;
+    var target = pinned != null ? pinned : real;
+    var speed = (real >= 1 && pinned == null) ? 0.0016 : 0.00045; /* per ms */
+    var d = target - dp, step = dt * speed * (RM ? 4 : 1);
+    dp += Math.abs(d) < step ? d : Math.sign(d) * step;
+    dp = clamp(dp, 0, 1);
+    if (real !== lastReal) { lastReal = real; lastRealT = now; }
+    else if (!finishing && pinned == null && real < 1 && now - lastRealT > 6000) {
+      parts.tex = 1; parts.fonts = 1; parts.frame = 1; computeReal();
+    }
+    starsWrap.style.opacity = '0.55';
+    pctEl.textContent = Math.round(dp * 100) + '%';
+    if (!finishing && pinned == null && real >= 1 && dp >= 0.999 && now - t0 > 1100) {
+      finishing = true;
+      setTimeout(lift, RM ? 120 : 620);
+    }
+    if (!doneFlag) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+
+<canvas id="sky" aria-hidden="true"></canvas>
+<div id="vignette" aria-hidden="true"></div>
+<div id="labels" aria-hidden="true"></div>
+<div id="figtitle" aria-hidden="true"><div class="ft-nm"></div><div class="ft-th"></div></div>
+<div id="cursor" aria-hidden="true"><canvas id="cursorCv" width="132" height="132"></canvas></div>
+
+<div class="chrome">
+  <div class="topbar">
+    <div class="wordmark">prachi patel<small>plate vii · the celestial sphere</small></div>
+    <div class="topright">
+      <nav class="toplinks" aria-label="elsewhere">
+        <a href="https://github.com/PrachiDPatel">github</a>
+        <a href="https://www.instagram.com/bluehalite/">art</a>
+        <a href="https://www.linkedin.com/in/prachidp">linkedin</a>
+        <a href="#" id="polarislink">polaris</a>
+      </nav>
+    </div>
+  </div>
+  <div class="bottombar">
+    <div class="tonight" id="tonight"></div>
+    <div class="microline">positions J2000 · one sphere, one scale · star sizes exaggerated</div>
+  </div>
+</div>
+
+<aside id="howto" role="dialog" aria-label="how this sky works">
+  <b class="glimmer" style="top:-8px;left:8%;--dx:-16px;--dy:-20px;--peak:.9;font-size:7px" aria-hidden="true">✦</b>
+  <b class="glimmer" style="top:-9px;left:30%;--dx:-6px;--dy:-26px;--peak:.6;font-size:5px;animation-delay:.3s" aria-hidden="true">✦</b>
+  <b class="glimmer" style="top:-7px;left:55%;--dx:8px;--dy:-24px;--peak:1;font-size:9px;animation-delay:.6s" aria-hidden="true">✦</b>
+  <b class="glimmer" style="top:-8px;left:78%;--dx:16px;--dy:-18px;--peak:.5;font-size:6px;animation-delay:.9s" aria-hidden="true">✦</b>
+  <b class="glimmer" style="top:12%;right:-7px;--dx:22px;--dy:-14px;--peak:.85;font-size:8px;animation-delay:1.2s" aria-hidden="true">✦</b>
+  <b class="glimmer" style="top:38%;right:-8px;--dx:26px;--dy:2px;--peak:.55;font-size:6px;animation-delay:1.5s" aria-hidden="true">✦</b>
+  <b class="glimmer" style="top:64%;right:-6px;--dx:20px;--dy:16px;--peak:.95;font-size:11px;animation-delay:1.8s" aria-hidden="true">✦</b>
+  <b class="glimmer" style="bottom:-8px;right:12%;--dx:16px;--dy:22px;--peak:.65;font-size:7px;animation-delay:2.1s" aria-hidden="true">✦</b>
+  <b class="glimmer" style="bottom:-9px;right:38%;--dx:4px;--dy:26px;--peak:1;font-size:8px;animation-delay:2.4s" aria-hidden="true">✦</b>
+  <b class="glimmer" style="bottom:-7px;left:30%;--dx:-10px;--dy:22px;--peak:.5;font-size:6px;animation-delay:2.7s" aria-hidden="true">✦</b>
+  <b class="glimmer" style="bottom:-8px;left:8%;--dx:-18px;--dy:16px;--peak:.8;font-size:10px;animation-delay:3s" aria-hidden="true">✦</b>
+  <b class="glimmer" style="bottom:32%;left:-7px;--dx:-24px;--dy:6px;--peak:.6;font-size:7px;animation-delay:3.3s" aria-hidden="true">✦</b>
+  <b class="glimmer" style="top:48%;left:-8px;--dx:-26px;--dy:-10px;--peak:.9;font-size:8px;animation-delay:1s" aria-hidden="true">✦</b>
+  <b class="glimmer" style="top:24%;left:-6px;--dx:-18px;--dy:-18px;--peak:.45;font-size:6px;animation-delay:2s" aria-hidden="true">✦</b>
+  <button id="howtox" aria-label="close how-to">✕</button>
+  <h2>how this sky works <span class="sp">✦</span></h2>
+  <ul>
+    <li><span class="sp">✦</span><b>drag</b> to spin the sky</li>
+    <li><span class="sp">✦</span><b>pinch</b> or <b>scroll</b> to zoom</li>
+    <li><span class="sp">✦</span><b>tap a name</b> to fly to that constellation</li>
+    <li><span class="sp">✦</span><b>tap a star</b> to open it</li>
+  </ul>
+  <div id="howtoTonight"></div>
+</aside>
+
+<div id="zoomctl">
+  <button id="zin" aria-label="zoom in">+</button>
+  <button id="zout" aria-label="zoom out">−</button>
+  <button id="helpbtn" aria-label="how to use this sky">?</button>
+</div>
+
+<aside class="panel" id="panel" role="dialog" aria-modal="false" aria-labelledby="panelTitle" hidden>
+  <div class="panel-head">
+    <div><div class="eyebrow" id="panelEyebrow"></div><h2 class="panel-title" id="panelTitle"></h2></div>
+    <button class="pclose" id="panelClose" aria-label="close panel">✕</button>
+  </div>
+  <div class="panel-body" id="panelBody"></div>
+</aside>
+
+<aside class="panel" id="menu" role="dialog" aria-modal="false" aria-label="menu" hidden>
+  <div class="panel-head">
+    <div><div class="eyebrow">navigate</div><h2 class="panel-title">menu</h2></div>
+    <button class="pclose" id="menuClose" aria-label="close menu">✕</button>
+  </div>
+  <div class="panel-body" id="menuBody"></div>
+</aside>
+
+<aside class="panel" id="logpanel" role="dialog" aria-modal="false" aria-labelledby="logTitle" hidden>
+  <div class="panel-head">
+    <div><div class="eyebrow">the instrument's notebook</div><h2 class="panel-title" id="logTitle">observer's log</h2></div>
+    <button class="pclose" id="logClose" aria-label="close log">✕</button>
+  </div>
+  <div class="panel-body">
+    <div class="logentry">
+      <h3>a note on honesty</h3>
+      <p>one sphere this time, and one scale. every star sits at its true direction on the celestial sphere — J2000 catalog, real RA and Dec, north up. the old plates had to flatten the sky onto paper; this one doesn't.</p>
+      <p class="dim">star sizes are exaggerated so a finger can find them. spin it: the whole sky wheels, and the figures keep their shapes from every side. milky way photo: NASA/Goddard Space Flight Center Scientific Visualization Studio, from Gaia DR2 (ESA/Gaia/DPAC) — public domain.</p>
+    </div>
+    <div class="logentry">
+      <h3>polaris <span class="sub">· the observer</span></h3>
+      <p>i put myself at polaris — the observer. the whole sky wheels around it and it doesn't move. that's the job: stay put, watch everything.</p>
+    </div>
+    <div class="logentry">
+      <h3>cassiopeia <span class="sub">· fabric arts</span></h3>
+      <p>thread and beads on fabric. γ cas is a variable star: it brightens and dims on no schedule, like craft moods. more fabric pieces to come.</p>
+    </div>
+    <div class="logentry">
+      <h3>orion <span class="sub">· jewelry</span></h3>
+      <p>rings and pendants under the hunter. the collection isn't catalogued yet — pieces to come.</p>
+      <p class="dim">lean into orion's sword and m42 is really glowing there.</p>
+    </div>
+    <div class="logentry">
+      <h3>lyra <span class="sub">· digital art</span></h3>
+      <p>nine paintings on nine real stars — vega, sheliak, sulafat and the double double. tap one to see it.</p>
+    </div>
+    <div class="logentry">
+      <h3>field notes</h3>
+      <p class="dim">mizar &amp; alcor sit 12′ apart — the pair that watches. lens looks outward; heliotrope looks inward.</p>
+      <p class="dim">merope is the lost pleiad of myth, the sister who dims her light; here she keeps "project hail mary, twice".</p>
+      <p class="dim">sheliak dims every 12.9 days — two stars crossing, an eclipse you can set a watch by.</p>
+      <p class="dim">the pleiades sit where they truly sit. lean in close: nine facets of one person.</p>
+      <p class="dim">the band crossing the sphere is the real milky way — 1.7 billion stars from the gaia survey, recolored cool to this palette, sitting in its true place. m31 smudges in the dark to the north-east.</p>
+      <p class="dim">the figures spread across the whole turning sky now — winter, spring, summer, autumn. scorpius sat this one out anyway.</p>
+    </div>
+    <div class="logsign">— p.</div>
+  </div>
+</aside>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-label="painting viewer">
+  <button class="x" id="lbClose" aria-label="close">✕</button>
+  <figure><img id="lbImg" src="" alt=""><figcaption id="lbCap"></figcaption></figure>
+</div>
+
+<nav class="sr" aria-label="interests"></nav>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ================= content (verbatim from the plate archive) ================= */
+const LANGC = {JavaScript:'#c9b458', Python:'#6d87a3', HTML:'#b9704f', system:'#a8937a'};
+const REPOS = [
+  {name:'lens', gh:'lens', lang:'JavaScript', live:null,
+   blurb:'One click captures screenshot, page text and console errors — sent to Claude with your own key. No backend, no telemetry.'},
+  {name:'heliotrope', gh:'heliotrope', lang:'Python', live:null,
+   blurb:'My all-in-one health app — meds, labs, sleep, doctors. Built because my health data lived in six places.'},
+  {name:'petrova-log', gh:'petrova-log', lang:'HTML', live:'https://petrova-log.pages.dev',
+   blurb:'Two-person letter-writing app themed after Project Hail Mary. One letter a day, sealed with wax.'},
+  {name:'keiko', gh:'keiko', lang:'HTML', live:'https://prachidpatel.github.io/keiko/',
+   blurb:'Staffing analytics for Code Ninjas, where I teach. Quantifies overstaffing waste, exports CSV.'},
+  {name:'gneissvision', gh:'gneissvision', lang:'Python', live:null,
+   blurb:'Thin-section image pairs in, mineral identification out — Claude Vision with optical reasoning.'},
+  {name:'stem-cell', gh:'stem-cell', lang:'system', live:null,
+   blurb:'Freelance website system: intake form in, static small-business site out. The block library is the product.'},
+  {name:'sleep-tracker', gh:'fish-and-chips-sleep-tracker', lang:'HTML', live:null,
+   blurb:'A sleep tracker that talks to my Pleco — log the night and the lights follow.'},
+  {name:'spotclean', gh:'spotclean', lang:'Python', live:null,
+   blurb:'Playlist manager, early stage. Next: Spotify API, duplicate detection, graveyard cleanup.'},
+];
+const PAINTINGS = [
+  {f:'nightshade%20detail%20view.webp', ptitle:'nightshade detail view', latin:'Atropa belladonna', alt:'Girl in profile with nightshade flowers under constellations'},
+  {f:'consumption%203.webp', ptitle:'consumption 3', latin:'Plumeria rubra', alt:'Woman with a golden plumeria crown'},
+  {f:'pug.webp', ptitle:'pug', latin:'Canis familiaris', alt:'Galaxy-eyed pug creature with rainbow petals'},
+  {f:'duck%202.webp', ptitle:'duck 2', latin:'Anas platyrhynchos', alt:'Duckling wearing a flower as a hat'},
+  {f:'snklily.webp', ptitle:'snklily', latin:'Pantherophis × Lilium', alt:'Coiled snake with a lily growing from its back'},
+  {f:'celeste.webp', ptitle:'celeste', latin:'Draco celestis', alt:'Pencil sketch of a dragon with celestial doodles'},
+  {f:'space.webp', ptitle:'space', latin:'Nox stellata', alt:'Starry night with crescent moon and fireflies'},
+  {f:'beach%20mountian.webp', ptitle:'beach mountian', latin:'Sol occidens', alt:'Sunset over mountain peaks and waves'},
+  {f:'pug2.webp', ptitle:'pug2', latin:'Canis familiaris, II', alt:'Second study of the galaxy-eyed pug creature'},
+];
+const CONTACTS = [
+  {n:'GitHub', h:'@PrachiDPatel · code lives here', url:'https://github.com/PrachiDPatel'},
+  {n:'Instagram — art', h:'@bluehalite · field notes', url:'https://www.instagram.com/bluehalite/'},
+  {n:'Instagram — personal', h:'@prachi__patel', url:'https://www.instagram.com/prachi__patel/'},
+  {n:'LinkedIn', h:'/in/prachidp', url:'https://www.linkedin.com/in/prachidp'},
+];
+const INTERESTS = {
+  prachi:{title:'prachi patel',
+    lede:'Hey! This is how I envision my mind palace would look — with all my interests sorted as stars into constellations. Click on a constellation to get started! Thanks :-)',
+    kind:'contacts',
+    facts:[['day job','AI/ML engineer, UPS'],['minor','geology'],['draws','paintings'],['workbench','jewelry · embroidery · fish'],['reads','Project Hail Mary, twice']]},
+  jewelry:{title:'silver-clay jewelry',
+    lede:'Rings, pendants, and piercing jewelry. Shaped by hand, fired in a kiln, polished until it catches the light.', kind:'text'},
+  embroidery:{title:'embroidery & beadwork', lede:'Thread and beads on fabric. Slow work, the good kind.', kind:'text'},
+  fish:{title:'paper-mache fish',
+    lede:'Sculpted fish, painted bright. One has LEDs inside and glows like a deep-sea signal — the code that drives it lives in fish-and-chips.',
+    kind:'links', links:[{n:'fish-and-chips', h:'the LED fish project', url:'https://github.com/PrachiDPatel/fish-and-chips'}]},
+  geology:{title:'geology',
+    lede:'My minor, and half my personality. I feed petrographic thin sections to Claude Vision and it tells me the mineral, with optical reasoning.',
+    kind:'links', links:[{n:'gneissvision', h:'thin sections in, minerals out', url:'https://github.com/PrachiDPatel/gneissvision'}]},
+  space:{title:'space',
+    lede:'Project Hail Mary, twice. A 14-pulsar tattoo in progress. Petrova Log is my love letter to it.',
+    kind:'links', links:[{n:'petrova-log', h:'the PHM letter app', url:'https://petrova-log.pages.dev'}]},
+  music:{title:'music',
+    lede:'Playlists as craft. SpotClean will one day pull my real library, detect duplicates, and clean the saved-songs graveyard.',
+    kind:'links', links:[{n:'spotclean', h:'the playlist project', url:'https://github.com/PrachiDPatel/spotclean'}]},
+  writing:{title:'writing',
+    lede:'Essays on biological immortality. Cosmic imagery, philosophical conceits, the occasional dark reversal. I also design murder mysteries.', kind:'text',
+    more:'book reviews — coming soon.'},
+  fabric:{title:'fabric arts',
+    lede:'Sewing, weaving, textiles — the fabric side of the workbench. Pieces to come.', kind:'text'},
+  'jewelry-tbd':{title:'jewelry',
+    lede:'The collection isn\u2019t catalogued yet — pieces to come.', kind:'text'},
+  photography:{title:'photography',
+    lede:'Photos — the collection isn\u2019t assembled yet. Pieces to come.', kind:'text'},
+  hireme:{title:'hire me',
+    lede:'I\u2019m an AI/ML engineer — machine learning at UPS by day. On the side I design and build websites and small tools for real businesses: one person, start to finish. If you have a project in mind, reach out.',
+    kind:'links', links:CONTACTS},
+  plants:{title:'plants',
+    lede:'Half my paintings are plants, labeled the way Linnaeus would. The rose I keep drawing turned out to be the Rosette Nebula — M42.', kind:'text'},
+  painting:{title:'digital art',
+    lede:'Paintings, digital and otherwise. Nine of them hang in Lyra — tap a star to see it.', kind:'text'},
+  software:{title:'software',
+    lede:'AI/ML engineering — the day job and the side projects. The repositories live in the big dipper.',
+    kind:'links', links:[{n:'github', h:'PrachiDPatel', url:'https://github.com/PrachiDPatel'}]},
+  // PARKED 2026-10-05 (her redirect): fish, music, space, plants, software, painting — unlinked from stars, data kept.
+  // (geology un-parked 2026-10-05 ~15:30: anchored at Aldebaran in Taurus;
+  //  moved to Leo/Regulus in the 2026-10-13 spread.)
+};
+
+/* about-me facets for the Pleiades — plain, factual, nothing invented */
+const ABOUT = {
+  engineer:{t:'ai/ml engineer', title:'ai/ml engineer at ups',
+    lede:'The only technical person on the mail innovations pricing team.'},
+  geology:{t:'geology minor', title:'geology minor',
+    lede:'Half my personality. Thin sections in, minerals out.'},
+  teaching:{t:'code ninjas', title:'part-time cs instructor',
+    lede:'I teach kids to code at Code Ninjas in Alpharetta.'},
+  intersection:{t:'art × stem × ethics', title:'art, science, ethics',
+    lede:'Drawn to where the three intersect — which is what this whole site is.'},
+  phm:{t:'project hail mary', title:'project hail mary, twice',
+    lede:'My favorite book. I built petrova-log as a love letter to it.'},
+  tools:{t:'annoyances → tools', title:'i turn annoyances into tools',
+    lede:'Every repository in the big dipper started as something that bugged me.'},
+  workbench:{t:'the workbench', title:'the workbench',
+    lede:'Jewelry, embroidery, a paper-mache fish with LEDs inside.'},
+  georgia:{t:'alpharetta, ga', title:'based in georgia',
+    lede:'Alpharetta, Georgia.'},
+  avatar:{t:'manta ray', title:'manta ray',
+    lede:'My avatar is a cute manta ray with the Pleiades on its back.'},
+};
+
+/* ================= figures: true J2000 RA/Dec, cluster mapping 2026-10-05 ======
+   POLARIS = intro · URSA MAJOR = tech projects · PLEIADES = about me ·
+   LYRA = digital art · CASSIOPEIA = hire me · ORION = jewelry ·
+   AQUILA = photography · LEO = geology · BOÖTES = fabric arts ·
+   PEGASUS = writing. the final ten, spread across the whole sky
+   (2026-10-13) — no background figures. */
+const CLS_TINT = {O:'#e2f2ff', B:'#c6e3fb', A:'#aed6f7', F:'#a2cdef', G:'#9cc2ea', K:'#a9c9f0', M:'#a5c6ec'}; // cold light ice blue, white-blue, cool white
+const DIM_TINT = '#93a9c9';
+
+const FIGURES = [
+  {id:'umi', cname:'POLARIS', sub:'start here',
+   stars:[
+     {n:'prachi patel', d:'α UMi', ra:37.95, dec:89.26, mag:1.98, cls:'F', interest:'prachi', observer:true},
+   ],
+   lines:[]},
+  {id:'cas', cname:'CASSIOPEIA', sub:'hire me',
+   stars:[
+     {n:'Caph', d:'β Cas', ra:2.29, dec:59.15, mag:2.27, cls:'F', labove:true}, // ra fixed round 35: was 9.10 (the "09m 10s" digits misread as degrees) — caph sat 6.8° east of true and the W's first segment was squashed to ~1/8 width. catalog: 00h 09m 10.7s = 2.29°
+     {n:'Schedar', d:'α Cas', ra:10.13, dec:56.54, mag:2.24, cls:'K', interest:'hireme'},
+     {n:'γ Cas', d:'γ Cas', ra:14.18, dec:60.72, mag:2.47, cls:'B', interest:'embroidery', labove:true},
+     {n:'Ruchbah', d:'δ Cas', ra:21.45, dec:60.24, mag:2.68, cls:'A'},
+     {n:'Segin', d:'ε Cas', ra:28.66, dec:63.67, mag:3.38, cls:'B'},
+   ],
+   lines:[['Caph','Schedar'],['Schedar','γ Cas'],['γ Cas','Ruchbah'],['Ruchbah','Segin']]},
+  {id:'ple', cname:'PLEIADES', sub:'about me',
+   note:'about prachi — nine facets',
+   stars:[
+     {n:'Alcyone', d:'η Tau', ra:56.87, dec:24.11, mag:2.87, cls:'B', about:'engineer'},
+     {n:'Atlas', d:'27 Tau', ra:57.29, dec:24.05, mag:3.63, cls:'B', about:'geology'},
+     {n:'Electra', d:'17 Tau', ra:56.22, dec:24.11, mag:3.70, cls:'B', about:'teaching'},
+     {n:'Maia', d:'20 Tau', ra:56.46, dec:24.37, mag:3.87, cls:'B', about:'intersection'},
+     {n:'Merope', d:'23 Tau', ra:56.58, dec:23.95, mag:4.18, cls:'B', about:'phm'},
+     {n:'Taygeta', d:'19 Tau', ra:56.30, dec:24.47, mag:4.30, cls:'B', about:'tools'},
+     {n:'Pleione', d:'28 Tau', ra:57.30, dec:24.14, mag:5.09, cls:'B', about:'workbench'},
+     {n:'Celaeno', d:'16 Tau', ra:56.20, dec:24.29, mag:5.45, cls:'B', about:'georgia'},
+     {n:'Asterope', d:'21 Tau', ra:56.48, dec:24.56, mag:5.76, cls:'A', about:'avatar'},
+     // positions re-verified round 35 against the Hipparcos catalog
+     // (norris & norris table): alcyone had sat 0.29° west of true,
+     // maia 0.16°, pleione 0.16° east, asterope 0.11°, celaeno 0.10°
+     // — inside a 1.6° cluster those are shape-breaking. electra,
+     // merope, taygeta checked out as they were.
+   ],
+   lines:[]},
+  {id:'ori', cname:'ORION', sub:'jewelry',
+   stars:[
+     {n:'Betelgeuse', d:'α Ori', ra:88.79, dec:7.41, mag:0.50, cls:'M', interest:'jewelry'},
+     {n:'Bellatrix', d:'γ Ori', ra:81.28, dec:6.35, mag:1.64, cls:'B', interest:'jewelry-tbd'},
+     {n:'Rigel', d:'β Ori', ra:78.63, dec:-8.20, mag:0.13, cls:'B', interest:'jewelry-tbd'},
+     {n:'Alnitak', d:'ζ Ori', ra:85.19, dec:-1.94, mag:1.77},
+     {n:'Alnilam', d:'ε Ori', ra:84.05, dec:-1.20, mag:1.69},
+     {n:'Mintaka', d:'δ Ori', ra:83.00, dec:-0.30, mag:2.23},
+     {n:'Saiph', d:'κ Ori', ra:86.94, dec:-9.67, mag:2.09},
+     {n:'Meissa', d:'λ Ori', ra:83.78, dec:9.93, mag:3.33},
+   ],
+   lines:[['Meissa','Betelgeuse'],['Meissa','Bellatrix'],['Betelgeuse','Alnitak'],['Bellatrix','Mintaka'],
+          ['Alnitak','Alnilam'],['Alnilam','Mintaka'],['Alnitak','Saiph'],['Mintaka','Rigel']]},
+  {id:'leo', cname:'LEO', sub:'geology',
+   stars:[
+     {n:'Regulus', d:'α Leo', ra:152.09, dec:11.97, mag:1.35, cls:'B', interest:'geology'},
+     {n:'Algieba', d:'γ Leo', ra:154.99, dec:19.85, mag:2.08, cls:'K'},
+     {n:'Denebola', d:'β Leo', ra:177.26, dec:14.57, mag:2.11, cls:'A'},
+     {n:'Zosma', d:'δ Leo', ra:168.52, dec:20.52, mag:2.56, cls:'A'},
+     {n:'Ras Elased', d:'ε Leo', ra:146.46, dec:23.77, mag:2.98, cls:'K'},
+     {n:'Chertan', d:'θ Leo', ra:168.56, dec:15.43, mag:3.32, cls:'A'},
+     {n:'Adhafera', d:'ζ Leo', ra:154.17, dec:23.42, mag:3.33, cls:'F'},
+     {n:'η Leo', d:'η Leo', ra:151.83, dec:16.77, mag:3.51, cls:'A'},
+   ],
+   lines:[['Ras Elased','Adhafera'],['Adhafera','Algieba'],['Algieba','η Leo'],['η Leo','Regulus'],['Algieba','Zosma'],['Zosma','Chertan'],['Chertan','Denebola']]},
+  {id:'uma', cname:'URSA MAJOR', sub:'tech projects',
+   note:'eight repos — every one started as an annoyance i automated',
+   stars:[
+     {n:'Dubhe', d:'α UMa', ra:165.93, dec:61.75, mag:1.79, repo:'stem-cell'},
+     {n:'Merak', d:'β UMa', ra:165.46, dec:56.38, mag:2.37, repo:'keiko'},
+     {n:'Phecda', d:'γ UMa', ra:178.84, dec:53.69, mag:2.44, repo:'gneissvision'},
+     {n:'Megrez', d:'δ UMa', ra:183.86, dec:57.03, mag:3.31, repo:'fish-and-chips-sleep-tracker'},
+     {n:'Alioth', d:'ε UMa', ra:193.51, dec:55.96, mag:1.77, repo:'spotclean'},
+     {n:'Mizar', d:'ζ UMa', ra:200.98, dec:54.93, mag:2.27, repo:'lens'},
+     {n:'Alkaid', d:'η UMa', ra:206.89, dec:49.31, mag:1.86, repo:'petrova-log'},
+     {n:'Alcor', d:'80 UMa', ra:201.30, dec:54.99, mag:3.99, repo:'heliotrope'},
+   ],
+   lines:[['Dubhe','Merak'],['Merak','Phecda'],['Phecda','Megrez'],['Megrez','Dubhe'],
+          ['Megrez','Alioth'],['Alioth','Mizar'],['Mizar','Alkaid']],
+   faint:[['Mizar','Alcor']]},
+  {id:'boo', cname:'BOÖTES', sub:'fabric arts',
+   stars:[
+     {n:'Arcturus', d:'α Boo', ra:213.92, dec:19.18, mag:-0.05, cls:'K', interest:'fabric'},
+     {n:'Izar', d:'ε Boo', ra:221.25, dec:27.07, mag:2.37, cls:'K'},
+     {n:'Muphrid', d:'η Boo', ra:208.67, dec:18.40, mag:2.68, cls:'G'},
+     {n:'Seginus', d:'γ Boo', ra:218.02, dec:38.31, mag:3.03, cls:'A'},
+     {n:'δ Boo', d:'δ Boo', ra:228.88, dec:33.31, mag:3.47, cls:'G'},
+     {n:'Nekkar', d:'β Boo', ra:225.49, dec:40.39, mag:3.49, cls:'G'},
+     {n:'ρ Boo', d:'ρ Boo', ra:217.95, dec:30.37, mag:3.57, cls:'G'},
+   ],
+   lines:[['Muphrid','Arcturus'],['Arcturus','Izar'],['Izar','ρ Boo'],['ρ Boo','Seginus'],['Seginus','Nekkar'],['Nekkar','δ Boo'],['δ Boo','Izar']]},
+  {id:'lyr', cname:'LYRA', sub:'digital art',
+   note:'nine paintings — tap a star to see it',
+   stars:[
+     {n:'Vega', d:'α Lyr', ra:279.23, dec:38.78, mag:0.03, cls:'A', painting:0},
+     {n:'Sulafat', d:'γ Lyr', ra:284.74, dec:32.69, mag:3.25, cls:'B', painting:1},
+     {n:'Sheliak', d:'β Lyr', ra:282.52, dec:33.36, mag:3.52, cls:'B', painting:2},
+     {n:'ε Lyr', d:'ε Lyr', ra:281.08, dec:39.67, mag:3.90, cls:'A', painting:3},
+     {n:'ζ Lyr', d:'ζ Lyr', ra:281.19, dec:37.61, mag:4.10, cls:'A', painting:4},
+     {n:'δ Lyr', d:'δ Lyr', ra:283.63, dec:36.90, mag:4.22, cls:'M', painting:5},
+     {n:'κ Lyr', d:'κ Lyr', ra:274.97, dec:36.06, mag:4.33, cls:'K', painting:6},
+     {n:'θ Lyr', d:'θ Lyr', ra:289.09, dec:38.13, mag:4.35, cls:'K', painting:7},
+     {n:'η Lyr', d:'η Lyr', ra:288.44, dec:39.15, mag:4.43, cls:'B', painting:8},
+   ],
+   lines:[['Vega','ε Lyr'],['Vega','ζ Lyr'],['Vega','κ Lyr'],['ζ Lyr','Sheliak'],['Sheliak','Sulafat'],['Sulafat','δ Lyr'],['δ Lyr','ζ Lyr'],['δ Lyr','θ Lyr'],['θ Lyr','η Lyr']]},
+  {id:'aql', cname:'AQUILA', sub:'photography',
+   stars:[
+     {n:'Altair', d:'α Aql', ra:297.70, dec:8.87, mag:0.76, cls:'A', interest:'photography'},
+     {n:'Tarazed', d:'γ Aql', ra:296.56, dec:10.61, mag:2.72, cls:'K'},
+     {n:'ζ Aql', d:'ζ Aql', ra:286.35, dec:13.86, mag:2.99, cls:'B'},
+     {n:'θ Aql', d:'θ Aql', ra:302.95, dec:-0.82, mag:3.24, cls:'B'},
+     {n:'δ Aql', d:'δ Aql', ra:291.37, dec:3.11, mag:3.36, cls:'A'},
+     {n:'Alshain', d:'β Aql', ra:298.82, dec:6.41, mag:3.71, cls:'G'},
+     {n:'η Aql', d:'η Aql', ra:298.12, dec:1.01, mag:3.77, cls:'G'},
+   ],
+   lines:[['ζ Aql','δ Aql'],['δ Aql','Altair'],['Altair','Tarazed'],['Altair','Alshain'],['Altair','θ Aql'],['θ Aql','η Aql']]},
+  {id:'peg', cname:'PEGASUS', sub:'writing',
+   stars:[
+     {n:'Alpheratz', d:'α And', ra:2.10, dec:29.09, mag:2.06, cls:'B'},
+     {n:'Enif', d:'ε Peg', ra:326.05, dec:9.88, mag:2.39, cls:'K'},
+     {n:'Scheat', d:'β Peg', ra:345.94, dec:28.08, mag:2.42, cls:'M', interest:'writing'},
+     {n:'Markab', d:'α Peg', ra:346.19, dec:15.21, mag:2.48, cls:'B', interest:'writing'},
+     {n:'Algenib', d:'γ Peg', ra:3.31, dec:15.18, mag:2.84, cls:'B'},
+     {n:'η Peg', d:'η Peg', ra:340.75, dec:30.22, mag:2.94, cls:'G'},
+     {n:'ζ Peg', d:'ζ Peg', ra:340.37, dec:10.83, mag:3.41, cls:'B'},
+     {n:'θ Peg', d:'θ Peg', ra:332.55, dec:6.19, mag:3.53, cls:'A'},
+   ],
+   lines:[['Markab','Scheat'],['Scheat','Alpheratz'],['Alpheratz','Algenib'],['Algenib','Markab'],['Scheat','η Peg'],['Markab','ζ Peg'],['ζ Peg','θ Peg'],['θ Peg','Enif']]},
+];
+
+/* ================= three.js: the celestial sphere ================= */
+const D2R = Math.PI / 180;
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const R_SKY = 100, R_BAND = 96, R_GRID = 98.5;
+let W = innerWidth, H = innerHeight;
+const MOB = Math.min(W, H) < 700;
+
+const canvas = document.getElementById('sky');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+renderer.setSize(W, H);
+renderer.setClearColor(0x06374f, 1);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(58, W / H, 0.1, 600);
+const sky = new THREE.Group();
+scene.add(sky);
+
+function radecVec(raDeg, decDeg, r) {
+  const ra = raDeg * D2R, dec = decDeg * D2R;
+  // z is NEGATED (round 33, her call: "flip the sky to match the real
+  // sky"). the old +z form was a reflection, not a rotation — every
+  // constellation rendered mirrored east-west (orion's shoulders
+  // swapped, leo's sickle hooking backwards). with -z the mapping is
+  // the true inside-of-the-sphere view: north up, RA increasing to
+  // the left. every consumer of (ra, dec) — sphere UVs, dirToRaDec,
+  // HOME_UP, targetUpFor's polar branch, clampOffPole's fallbacks —
+  // carries the same sign so stars, photo and painting stay glued.
+  return new THREE.Vector3(r * Math.cos(dec) * Math.cos(ra), r * Math.sin(dec), -r * Math.cos(dec) * Math.sin(ra));
+}
+function hexRGB(hex) {
+  return [parseInt(hex.slice(1,3),16)/255, parseInt(hex.slice(3,5),16)/255, parseInt(hex.slice(5,7),16)/255];
+}
+function hexA(hex, a) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+/* ---------- her star recipe, baked to sprite textures ----------
+   ROUND 20 (2026-11-05, her call): the stars wear the APP ICON — the
+   two-layer ice ✦ from favicon.svg — with the icon's soft glow disc
+   and extremely fine radiated starlight, breathing on a slow pulse
+   (frame loop). The cut-gem body of rounds 15-19 ("shaped weird") is
+   retired. History: a crisp 4-point star POLYGON — long points,
+   faceted waist, cut-gem facets, a tiny white diamond at the center,
+   diffraction spikes. (Rebuilt 2026-10-17, her call: the old recipe —
+   big soft halo ball + round core — read as circular blobs: "the stars are
+   too circular, make them pretty and geometric.")
+   2026-10-30, her call again: "make the stars prettier like the ones on the
+   landing page" — the portfolio hero's JWST bursts. So: body goes WHITE
+   (tint washed over at low alpha), diffraction spikes on EVERY star
+   (long vertical, shorter horizontal, two faint diagonal pairs), a small
+   bright halo disc + solid core like the landing SVG. Still geometric —
+   spikes and facets, glow stays tight. */
+const texCache = {};
+function iconGlow(x, cx, cy, S) {
+  // the app icon's own halo (round 20, her call: stars shaped like the
+  // app icon, glowy and ethereal): a soft ice disc that fades to
+  // nothing well inside the sprite. it is filled as a CIRCLE, never a
+  // rect — the 2026-11-03 "transparent background" patch came from a
+  // full-canvas wash; a radial disc has no square edge to show.
+  const r = S * 0.50;
+  const g = x.createRadialGradient(cx, cy, 0, cx, cy, r);
+  g.addColorStop(0, 'rgba(191,227,255,.21)');
+  g.addColorStop(0.38, 'rgba(169,214,242,.13)');
+  g.addColorStop(0.72, 'rgba(169,214,242,.055)');
+  // glow touched down (round 35, her call while auditing shapes:
+  // the halo was fat enough to blur where a star actually sits,
+  // and overlapping halos bent the patterns. was .30/.20/.09 —
+  // the sparkle body carries now, the disc just breathes behind it)
+  g.addColorStop(1, 'rgba(169,214,242,0)');
+  x.fillStyle = g;
+  x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill();
+}
+function drawSpikes(x, cx, cy, S, hero, boost) {
+  const vl = S * (hero ? 0.50 : 0.47), hl = vl * 0.66, dl = vl * 0.50;
+  // extremely fine starlight, lightly radiated (round 20): hair-thin
+  // rays — the light the ✦ sheds, not structure. (Round 25: the
+  // six-pointed star of round 24 was tried and she called it back —
+  // "the four pointed was better" — so the ✦ and its four-axis rays
+  // are restored verbatim; round 24's size/pulse/glow gains stay.)
+  x.lineCap = 'round'; x.lineWidth = Math.max(1.2, S * 0.007);
+  const spike = (x1, y1, x2, y2, aMid) => {
+    const gr = x.createLinearGradient(x1, y1, x2, y2);
+    gr.addColorStop(0, 'rgba(255,255,255,0)');
+    gr.addColorStop(0.5, `rgba(235,248,255,${aMid})`);
+    gr.addColorStop(1, 'rgba(255,255,255,0)');
+    x.strokeStyle = gr;
+    x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.stroke();
+  };
+  spike(cx, cy - vl, cx, cy + vl, 0.80 * boost);
+  spike(cx - hl, cy, cx + hl, cy, 0.58 * boost);
+  const dd = dl * Math.SQRT1_2;
+  spike(cx - dd, cy - dd, cx + dd, cy + dd, 0.38 * boost);
+  spike(cx - dd, cy + dd, cx + dd, cy - dd, 0.38 * boost);
+}
+function iconSparkPath(x, cx, cy, Rv, Rh) {
+  // the app icon's ✦ in its own proportions (favicon.svg): tips on the
+  // axes, waist vertices on the diagonals at 0.124 of the tip radius
+  // (icon: tip 46, waist offset 5.7), straight edges, deep pinch.
+  const wx = Rh * 0.085, wy = Rv * 0.085; // round 27 (her words: spindly, deeper webbing): the waist carves past the icon's 0.124 to 0.085 — long thin points, deep webs between them
+  x.beginPath();
+  x.moveTo(cx, cy - Rv);
+  x.lineTo(cx + wx, cy - wy);
+  x.lineTo(cx + Rh, cy);
+  x.lineTo(cx + wx, cy + wy);
+  x.lineTo(cx, cy + Rv);
+  x.lineTo(cx - wx, cy + wy);
+  x.lineTo(cx - Rh, cy);
+  x.lineTo(cx - wx, cy - wy);
+  x.closePath();
+}
+function starTexture(tint, flare, hero) {
+  const key = tint + (flare ? ':f' : '') + (hero ? ':h' : '');
+  if (texCache[key]) return texCache[key];
+  const S = 256, c = document.createElement('canvas');
+  c.width = c.height = S;
+  const x = c.getContext('2d'), cx = S/2, cy = S/2;
+  // the app icon's ✦, worn by every star (round 20, restored round
+  // 25): soft ice glow disc, hair-fine radiated rays, and the icon's
+  // two-layer body — outer sparkle in white washed with the star's
+  // tint, inner sparkle at 0.46 scale in near-white.
+  iconGlow(x, cx, cy, S);
+  drawSpikes(x, cx, cy, S, hero, flare ? 1 : 0.82);
+  const Rv = S * (hero ? 0.44 : 0.35), Rh = Rv * 0.85;
+  x.globalAlpha = 1;
+  iconSparkPath(x, cx, cy, Rv, Rh); x.fillStyle = '#ffffff'; x.fill();
+  x.globalAlpha = 0.30;
+  iconSparkPath(x, cx, cy, Rv, Rh); x.fillStyle = tint; x.fill();
+  x.globalAlpha = 0.95;
+  iconSparkPath(x, cx, cy, Rv * 0.46, Rh * 0.46); x.fillStyle = '#eef9ff'; x.fill();
+  x.globalAlpha = 1;
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  texCache[key] = t;
+  return t;
+}
+/* chromatic-aberration variant for the pleiades: prismatic RGB fringing
+   baked into the texture — a lens effect, tasteful, never a rainbow paint job */
+function starTextureChroma(tint, hero) {
+  const key = 'chroma:' + tint + (hero ? ':h' : '');
+  if (texCache[key]) return texCache[key];
+  const S = 256, c = document.createElement('canvas');
+  c.width = c.height = S;
+  const x = c.getContext('2d'), cx = S/2, cy = S/2;
+  // the app icon's ✦, prism-fringed (lyra): same glow disc and
+  // fine rays as every other star; the body keeps lyra's baked-in
+  // chromatic fringing on the outer sparkle only.
+  iconGlow(x, cx, cy, S);
+  drawSpikes(x, cx, cy, S, hero, 0.9);
+  const Rv = S * (hero ? 0.44 : 0.35), Rh = Rv * 0.85;
+  const spark = (ox, oy) => { iconSparkPath(x, cx + ox, cy + oy, Rv, Rh); x.fill(); };
+  x.globalAlpha = 0.50; x.fillStyle = '#8fd4ff'; spark(-2.5, 0);   // ice fringe
+  x.globalAlpha = 0.50; x.fillStyle = '#6ecfff'; spark(2.5, 0);    // blue fringe
+  x.globalAlpha = 1; x.fillStyle = '#ffffff'; spark(0, 0);         // white body
+  x.globalAlpha = 0.30; x.fillStyle = tint; spark(0, 0);           // tint wash
+  x.globalAlpha = 0.95; x.fillStyle = '#eef9ff';
+  iconSparkPath(x, cx, cy, Rv * 0.46, Rh * 0.46); x.fill();        // inner sparkle
+  x.globalAlpha = 1;
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  texCache[key] = t;
+  return t;
+}
+function softDotTexture() {
+  if (texCache.dot) return texCache.dot;
+  const S = 64, c = document.createElement('canvas');
+  c.width = c.height = S;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(S/2, S/2, 0, S/2, S/2, S/2);
+  g.addColorStop(0, 'rgba(255,255,255,1)');
+  g.addColorStop(0.35, 'rgba(255,255,255,.5)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0, 0, S, S);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  texCache.dot = t;
+  return t;
+}
+function ringTexture(dashed) {
+  const key = dashed ? 'ringD' : 'ring';
+  if (texCache[key]) return texCache[key];
+  const S = 128, c = document.createElement('canvas');
+  c.width = c.height = S;
+  const x = c.getContext('2d');
+  x.strokeStyle = '#a9d6f2'; x.lineWidth = 3;
+  if (dashed) x.setLineDash([10, 8]);
+  x.beginPath(); x.arc(S/2, S/2, S/2 - 8, 0, 7); x.stroke();
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  texCache[key] = t;
+  return t;
+}
+
+function starTint(s) { return s.cls ? CLS_TINT[s.cls[0]] : DIM_TINT; }
+function magScale(mag, hero) { // world units at R_SKY=100.
+  // heroes (her interest/archive stars) are deliberately oversized — the bold
+  // dots of a star-chart app, footnoted — at correct RELATIVE sizes to each
+  // other. background figure stars get a mild lift too.
+  // THE SIZE MATH (round 23, her question: "what math demonstrates
+  // relative sizes while still looking aesthetic and visible and
+  // easily clickable?"): a compressed pogson law. physical diameter
+  // goes as the square root of flux: d ~ 10^(-0.2 * mag). the 0.2 is
+  // multiplied by a compression dial k — k = 1 is the true law
+  // (a 5.5-mag span = 12x, unusable on a phone), k = 0.33 (round 21)
+  // read as one size, k = 0.8 (her dial, round 23) gives ~7.6x
+  // across the site's span BEFORE the clamps; a floor (2.2 world)
+  // keeps the faintest stars visible and a cap (10 world, 76px on
+  // screen) keeps the anchors from eating the sky, so the gradient
+  // lives in the middle magnitudes where most stars sit. click
+  // targets never shrink with the art: hitStar keeps its own 38px
+  // floor, so a small star is still an easy tap.
+  const raw = 2.7 * Math.pow(10, -0.20 * 0.8 * (mag - 0.13));
+  if (hero) return Math.min(9.5, Math.max(1.9, raw * 3.0));
+  return Math.min(5.2, Math.max(1.2, raw * 1.35));
+}
+
+const contentStars = [];
+FIGURES.forEach((f, fi) => {
+  f.centroid = new THREE.Vector3();
+  // intro stagger: BFS from brightest over the line graph
+  const adj = {};
+  f.lines.forEach(([a,b]) => { (adj[a]=adj[a]||[]).push(b); (adj[b]=adj[b]||[]).push(a); });
+  const firstS = f.stars.reduce((m,x) => x.mag < m.mag ? x : m, f.stars[0]).n;
+  const depth = {[firstS]:0}, q = [firstS];
+  while (q.length) {
+    const cur = q.shift();
+    (adj[cur]||[]).forEach(nb => { if (!(nb in depth)) { depth[nb] = depth[cur]+1; q.push(nb); } });
+  }
+  // hero treatment (repair 2026-10-13): her flagged stars, PLUS every major
+  // star of the figure — mag <= 2.6 or one of the figure's three brightest.
+  // flag-only heroes left orion's belt, sirius's companions, elnath, castor
+  // and other majors as dim smudges while ursa major (all repo stars) blazed.
+  const topBright = new Set([...f.stars].sort((a, b) => a.mag - b.mag).slice(0, 3));
+  f.stars.forEach(st => {
+    st.f = f;
+    st.vec = radecVec(st.ra, st.dec, R_SKY);
+    st.dir = st.vec.clone().normalize();
+    st.col = starTint(st);
+    st._delay = fi * 0.35 + (depth[st.n] || 0) * 0.45;
+    st._phase = Math.random() * 6.28;
+    f.centroid.add(st.dir);
+    st.hero = st.interest || st.repo !== undefined || st.painting !== undefined ||
+      st.about !== undefined || st.observer || st.mag <= 2.6 || topBright.has(st);
+    const tint = st.col, flare = st.mag < 1.6;
+    const tex = st.f.id === 'lyr' ? starTextureChroma(tint, st.hero) : starTexture(tint, flare, st.hero);
+    const mat = new THREE.SpriteMaterial({
+      map: tex, transparent: true,
+      blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0,
+    });
+    const sp = new THREE.Sprite(mat);
+    // draw AFTER both sky spheres (round 19): transparent sorting goes
+    // by object position, and the sky spheres sit at the origin — near
+    // the camera — so they sorted AFTER the sprites and the photo,
+    // drawn over them at up to 94% opacity, buried the illustrated
+    // stars at constellation zooms (they read as plain photo dots).
+    sp.renderOrder = 3;
+    const sc = magScale(st.mag, st.hero);
+    sp.scale.set(sc, sc, 1);
+    sp.position.copy(st.vec);
+    sp.userData.star = st;
+    st.sprite = sp; st.baseScale = sc;
+    // the glitter layer (round 23, her call: "where is the glitter/
+    // starlight glow?"): a soft ice disc UNDER each star, breathing
+    // on its own slow phase — the shimmer lives here, not in the
+    // baked texture, so the body can stay crisp while the light
+    // around it swells and settles.
+    const gm = new THREE.SpriteMaterial({map: softDotTexture(), color: 0x9fd4f5,
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0});
+    const gs = new THREE.Sprite(gm);
+    gs.renderOrder = 2;
+    gs.position.copy(st.vec);
+    sky.add(gs);
+    st.glow = gs;
+    st.baseAlpha = f.bg ? 0.58 : st.hero ? 0.92 : 0.88;
+    sky.add(sp);
+    contentStars.push(st);
+    if (st.observer) { // polaris: double gold ring
+      st.rings = [];
+      [[4.6, 0.75], [7.2, 0.34]].forEach(([rs, op]) => {
+        const rm = new THREE.SpriteMaterial({map: ringTexture(false), transparent: true,
+          color: 0xcf7a44, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0});
+        const ring = new THREE.Sprite(rm);
+        ring.renderOrder = 3;
+        ring.scale.set(rs, rs, 1);
+        ring.position.copy(st.vec);
+        ring.userData.ring = {base: rs, op};
+        sky.add(ring);
+        st.rings.push(ring);
+      });
+    }
+    if (st.opens) { // gateway: dashed gold ring
+      const rm = new THREE.SpriteMaterial({map: ringTexture(true), transparent: true,
+        color: 0xcf7a44, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0});
+      const ring = new THREE.Sprite(rm);
+      ring.renderOrder = 3;
+      const rs = st.baseScale + 2.6;
+      ring.scale.set(rs, rs, 1);
+      ring.position.copy(st.vec);
+      ring.userData.ring = {base: rs, op: 0.55, spin: true};
+      sky.add(ring);
+      (st.rings = st.rings || []).push(ring);
+    }
+  });
+  f.centroid.normalize();
+});
+
+/* per-figure caption anchors (round 32): a figure whose shape has a
+   heart gets its name there instead of at the bare centroid. leo is
+   two shapes — the sickle and the triangle — and its centroid falls
+   in the empty gap between them, so the name floated in the void
+   and the sickle's base (regulus) read as a separate little figure
+   ("isn't regulus in canis minor?"). the name now sits on the
+   sickle's spine, between algieba and regulus. */
+const CAP_ANCHORS = { leo: ['Algieba', 'Regulus'] };
+FIGURES.forEach(f => {
+  const names = CAP_ANCHORS[f.id];
+  if (!names) return;
+  const v = new THREE.Vector3();
+  for (const n of names) {
+    const st = f.stars.find(s2 => s2.n === n);
+    if (st) v.add(st.dir);
+  }
+  if (v.lengthSq() > 0) f.capDir = v.normalize().clone();
+});
+
+/* constellation figures: lines at true positions — ghostly glowing
+   blue since round 31 (her call; the aged gold of rounds 1-30 is
+   retired): hair-thin, additive, low alpha — a breath of light
+   between the stars, not a wire. */
+FIGURES.forEach(f => {
+  if (!f.lines.length) return;
+  const pts = [];
+  const byName = {};
+  f.stars.forEach(s => byName[s.n] = s);
+  f.lines.forEach(([a,b]) => {
+    const A = byName[a], B = byName[b];
+    if (A && B) pts.push(A.vec, B.vec);
+  });
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const mat = new THREE.LineBasicMaterial({color: 0x8fc9f2, transparent: true,
+    opacity: f.bg ? 0.22 : 0.55, depthWrite: false}); // ghostly blue (round 31): a hair of pale light between the stars. (additive at .34 was tried first and vanished against the starfield — normal blending at .55 is the ghost that actually shows; focus dimming scales from these base values)
+  mat.userData.baseOp = mat.opacity;
+  const ls = new THREE.LineSegments(geo, mat);
+  // draw AFTER the sky spheres (round 31 — the lines have been
+  // silently buried for rounds: transparent sorting ties at the
+  // origin, the photo sphere blended over them at 94% and left
+  // ~nothing; the round-19 fix gave the STARS renderOrder 3 but
+  // nobody gave it to the lines). 2 = above both spheres, under
+  // the glow and the stars.
+  ls.renderOrder = 2;
+  sky.add(ls);
+  f._lineMats = [mat];
+  (f.faint || []).forEach(([a, b]) => {
+    const A = byName[a], B = byName[b];
+    if (!A || !B) return;
+    const g2 = new THREE.BufferGeometry().setFromPoints([A.vec, B.vec]);
+    const m2 = new THREE.LineDashedMaterial({color: 0x8fc9f2, transparent: true,
+      opacity: 0.50, dashSize: 0.7, gapSize: 0.55, depthWrite: false});
+    m2.userData.baseOp = m2.opacity;
+    f._lineMats.push(m2);
+    const ln = new THREE.Line(g2, m2);
+    ln.computeLineDistances();
+    ln.renderOrder = 2;
+    sky.add(ln);
+  });
+});
+
+/* ---------- the milky way: real survey data, recolored ----------
+   NASA SVS Deep Star Maps 2020 (1.7 billion stars: Hipparcos-2, Tycho-2,
+   Gaia DR2) — already in J2000 equatorial coordinates, so no reprojection.
+   structure is the survey's (true band path, dark rifts, galactic-center
+   bulge); the color story is hers: deep teal shadows, golden star clouds,
+   copper highlights. public domain.
+   credit: NASA/Goddard Space Flight Center Scientific Visualization Studio.
+   Gaia DR2: ESA/Gaia/DPAC. */
+let photoMat = null, paintedMat = null;
+(function buildMilkyWayPhoto() {
+  // non-indexed so the RA 180° meridian can interpolate u the short way:
+  // raw u = 0.5 - ra/360 (no modulo) + per-triangle unwrap at the ra=0 cut
+  // + RepeatWrapping. Without this, seam quads interpolate u across the whole
+  // texture and smear the full sky into one vertical stripe (the banding bug).
+  const geo = new THREE.SphereGeometry(R_BAND, 128, 80).toNonIndexed();
+  const pp = geo.attributes.position, uu = geo.attributes.uv, v = new THREE.Vector3();
+  for (let k = 0; k < pp.count; k++) {
+    v.fromBufferAttribute(pp, k);
+    const dec = Math.asin(THREE.MathUtils.clamp(v.y / R_BAND, -1, 1)) / D2R;
+    let ra = Math.atan2(-v.z, v.x) / D2R; if (ra < 0) ra += 360; // -z: the round-33 un-mirror, same sign as radecVec
+    // SVS convention: RA 0h at image center, RA increasing to the LEFT
+    uu.setXY(k, 0.5 - ra / 360, (90 - dec) / 180);
+  }
+  for (let t = 0; t < pp.count; t += 3) {
+    let mn = 2, mx = -2;
+    for (let k = t; k < t + 3; k++) { const u = uu.getX(k); if (u < mn) mn = u; if (u > mx) mx = u; }
+    if (mx - mn > 0.5) for (let k = t; k < t + 3; k++) if (uu.getX(k) < 0) uu.setX(k, uu.getX(k) + 1);
+  }
+  const tex = new THREE.Texture();
+  const mat = new THREE.MeshBasicMaterial({map: tex, side: THREE.BackSide, depthWrite: false,
+    transparent: true});
+  /* round 42: the background streams in under the eclipse loader's
+     eye — real byte progress drives it. Any hiccup fails over to a
+     plain load, and an error still counts as done: the loader's job
+     is a graceful wait, never a hostage-taking. */
+  (async () => {
+    const finish = (t) => {
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.flipY = false; // uv v=0 = image row 0 = Dec +90
+      t.wrapS = THREE.RepeatWrapping;
+      t.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+      mat.map = t; mat.needsUpdate = true;
+      window.__texApplied = 1; // the frame gate (round 46) reads this
+      if (window.BOOT) BOOT.done('tex');
+    };
+    const texFail = () => { window.__texFailed = 1; if (window.BOOT) BOOT.done('tex'); };
+    const plainLoad = () => {
+      new THREE.TextureLoader().load('art/milkyway-equatorial.jpg', finish, undefined, texFail);
+    };
+    try {
+      const res = await fetch('art/milkyway-equatorial.jpg');
+      if (!res.ok || !res.body) throw new Error('sky fetch');
+      const total = +res.headers.get('Content-Length') || 3625804;
+      const reader = res.body.getReader(); const chunks = []; let got = 0;
+      for (;;) {
+        // a stalled stream must not hang the loader (round 46, her
+        // phone sat on it): 6 s without a byte aborts to plain load.
+        const r = await Promise.race([reader.read(),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('sky stall')), 6000))]);
+        if (r.done) break;
+        chunks.push(r.value); got += r.value.length;
+        if (window.BOOT) BOOT.setTex(got / total);
+      }
+      // done means the image has actually DECODED (round 46: the old
+      // code declared done at byte-arrival, so the loader could lift
+      // before the sky existed on screen).
+      new THREE.TextureLoader().load(
+        URL.createObjectURL(new Blob(chunks, {type: 'image/jpeg'})), finish, undefined, texFail);
+    } catch (e) { plainLoad(); }
+  })();
+  mat.toneMapped = false;
+  const photoMesh = new THREE.Mesh(geo, mat);
+  photoMesh.renderOrder = 0;
+  sky.add(photoMesh);
+  photoMat = mat;
+})();
+
+/* ---------- the painted sky: astronomy-app manner, zero grain ----------
+   A procedural equirectangular painting in her Carina palette — teal in
+   varying shades, soft golden/copper wisps along the TRUE galactic band
+   (computed from the north galactic pole, not eyeballed). Real apps
+   (Stellarium et al.) paint rather than photograph for exactly this reason:
+   it stays sharp at any zoom. Crossfades in past the photo's useful
+   resolution: deep zoom = fully drawn view. Palettes match, so the
+   crossfade is seamless. */
+(function buildPaintedSky() {
+  const W2 = 2048, H2 = 1024;
+  const c = document.createElement('canvas'); c.width = W2; c.height = H2;
+  const x = c.getContext('2d');
+  let seed = 1234567;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  // base: deep teal, gently lifted toward the band latitudes
+  const bg = x.createLinearGradient(0, 0, 0, H2);
+  bg.addColorStop(0.00, '#03141d');
+  bg.addColorStop(0.30, '#06374f');
+  bg.addColorStop(0.50, '#084a68');
+  bg.addColorStop(0.70, '#06374f');
+  bg.addColorStop(1.00, '#03141d');
+  x.fillStyle = bg; x.fillRect(0, 0, W2, H2);
+  // large soft blotches: teal in varying shades (drawn 3x for x-wrap)
+  const teals = ['#084a68', '#09688c', '#06374f', '#0a3a52', '#052a3c', '#0b4a5e'];
+  const blob = (bx, by, r, color, a) => {
+    for (const ox of [-W2, 0, W2]) {
+      const g = x.createRadialGradient(bx + ox, by, 0, bx + ox, by, r);
+      g.addColorStop(0, hexA(color, a));
+      g.addColorStop(1, hexA(color, 0));
+      x.fillStyle = g;
+      x.fillRect(bx + ox - r, by - r, r * 2, r * 2);
+    }
+  };
+  for (let i = 0; i < 70; i++) {
+    blob(rnd() * W2, rnd() * H2, 120 + rnd() * 340,
+      teals[(rnd() * teals.length) | 0], 0.05 + rnd() * 0.09);
+  }
+  // the true galactic band: dec(ra) from the north galactic pole
+  // (J2000: RA 192.8595°, Dec +27.1283°) — great circle 90° from the pole
+  const aN = 192.8595 * D2R, dN = 27.1283 * D2R;
+  const bandDec = raDeg => {
+    const a = raDeg * D2R;
+    return Math.atan(-Math.cos(dN) * Math.cos(a - aN) / Math.sin(dN)) / D2R;
+  };
+  const X = ra => (0.5 - ra / 360) * W2; // same convention as the photo UVs
+  const Y = dec => (90 - dec) / 180 * H2;
+  // cold light ice-blue wisps along the band; intensity swells toward the
+  // galactic center (RA~266°). no warm tones anywhere.
+  const ices = ['#a9d6f2', '#8fc3ec', '#bfe0f7', '#7fb5e6', '#a2cdec'];
+  // soft wisps along the band; intensity swells toward the galactic center (RA~266°)
+  for (let ix = 0; ix < W2; ix += 6) {
+    let ra = (0.5 - ix / W2) * 360; if (ra < 0) ra += 360;
+    const dc = bandDec(ra);
+    let dGC = Math.abs(ra - 266); if (dGC > 180) dGC = 360 - dGC;
+    const inten = 0.30 + 0.70 * Math.exp(-(dGC * dGC) / (2 * 70 * 70));
+    const cy = Y(dc);
+    for (let l = 0; l < 3; l++) {
+      const wob = Math.sin(ix * 0.021 + l * 2.1) * 13 + (rnd() - 0.5) * 10;
+      const rx = 50 + rnd() * 70, ry = 6 + rnd() * 8 + l * 6;
+      const col = ices[(rnd() * ices.length) | 0];
+      for (const ox of [-W2, 0, W2]) {
+        const px = ix + ox, py = cy + wob;
+        x.save(); x.translate(px, py); x.scale(1, ry / rx);
+        const g = x.createRadialGradient(0, 0, 0, 0, 0, rx);
+        g.addColorStop(0, hexA(col, 0.085 * inten));
+        g.addColorStop(1, hexA(col, 0));
+        x.fillStyle = g;
+        x.beginPath(); x.arc(0, 0, rx, 0, 7); x.fill();
+        x.restore();
+      }
+    }
+    // the dark rift: a thin darker thread just off the band center
+    for (const ox of [-W2, 0, W2]) {
+      const px = ix + ox, py = cy + 9 + Math.sin(ix * 0.03) * 5;
+      x.save(); x.translate(px, py); x.scale(1, 0.09);
+      const g = x.createRadialGradient(0, 0, 0, 0, 0, 60);
+      g.addColorStop(0, hexA('#02141c', 0.22 * inten));
+      g.addColorStop(1, hexA('#02141c', 0));
+      x.fillStyle = g;
+      x.beginPath(); x.arc(0, 0, 60, 0, 7); x.fill();
+      x.restore();
+    }
+  }
+  // galactic-center glow, soft ice blue
+  blob(X(266), Y(-29), 150, '#7fb5e6', 0.16);
+  blob(X(266), Y(-29), 70, '#bfe0f7', 0.14);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.flipY = false; // uv v=0 = canvas row 0 = Dec +90 (same convention as the photo)
+  tex.wrapS = THREE.RepeatWrapping;
+  paintedMat = new THREE.MeshBasicMaterial({map: tex, side: THREE.BackSide,
+    depthWrite: false, transparent: true});
+  paintedMat.toneMapped = false;
+  // same custom equirectangular UVs as the photo sphere (RA 0h at u=0.5,
+  // RA increasing left; per-triangle unwrap at the seam)
+  const geo = new THREE.SphereGeometry(97, 64, 40).toNonIndexed();
+  const pp = geo.attributes.position, uu = geo.attributes.uv, vv = new THREE.Vector3();
+  for (let k = 0; k < pp.count; k++) {
+    vv.fromBufferAttribute(pp, k);
+    const dec = Math.asin(THREE.MathUtils.clamp(vv.y / 97, -1, 1)) / D2R;
+    let ra = Math.atan2(-vv.z, vv.x) / D2R; if (ra < 0) ra += 360; // -z: the round-33 un-mirror, same sign as radecVec
+    uu.setXY(k, 0.5 - ra / 360, (90 - dec) / 180);
+  }
+  for (let t = 0; t < pp.count; t += 3) {
+    let mn = 2, mx = -2;
+    for (let k = t; k < t + 3; k++) { const u = uu.getX(k); if (u < mn) mn = u; if (u > mx) mx = u; }
+    if (mx - mn > 0.5) for (let k = t; k < t + 3; k++) if (uu.getX(k) < 0) uu.setX(k, uu.getX(k) + 1);
+  }
+  const m = new THREE.Mesh(geo, paintedMat);
+  m.renderOrder = -1; // painted first; the photo crossfades over it
+  sky.add(m);
+})();
+
+/* faint RA/Dec graticule — geometric, allowed */
+(function buildGraticule() {
+  const pts = [];
+  for (let ra = 0; ra < 360; ra += 30) {
+    for (let dec = -60; dec < 80; dec += 4) {
+      pts.push(radecVec(ra, dec, R_GRID), radecVec(ra, dec + 4, R_GRID));
+    }
+  }
+  for (let dec = -60; dec <= 80; dec += 20) {
+    for (let ra = 0; ra < 360; ra += 4) {
+      pts.push(radecVec(ra, dec, R_GRID), radecVec(ra + 4, dec, R_GRID));
+    }
+  }
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  sky.add(new THREE.LineSegments(geo, new THREE.LineBasicMaterial({
+    color: 0x3f7d8c, transparent: true, opacity: 0.055, depthWrite: false})));
+})();
+
+/* faint static field, fixed to the sphere */
+(function buildField() {
+  const PR = renderer.getPixelRatio(); // point sizes are raw pixels: scale for high-DPR phones
+  const mk = (n, size, op) => {
+    const p = new Float32Array(n * 3), col = new Float32Array(n * 3);
+    const tints = ['#e8f2ff', '#cfe4fb', '#b5d4f5', '#9fc2ec'];
+    for (let i = 0; i < n; i++) {
+      const ra = Math.random() * 360, dec = -55 + Math.random() * 140;
+      const v = radecVec(ra, dec, R_SKY - 0.5);
+      p.set([v.x, v.y, v.z], i * 3);
+      const [r, g, b] = hexRGB(tints[(Math.random() * tints.length) | 0]);
+      const d = 0.25 + Math.random() * 0.75;
+      col.set([r * d, g * d, b * d], i * 3);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(p, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    const mat = new THREE.PointsMaterial({size, sizeAttenuation: false, map: softDotTexture(),
+      transparent: true, opacity: op, vertexColors: true, depthWrite: false,
+      blending: THREE.AdditiveBlending});
+    sky.add(new THREE.Points(geo, mat));
+  };
+  mk(430, 2.1 * PR, 0.75);
+  mk(70, 3.4 * PR, 0.8);
+})();
+
+/* real deep-sky glows at true positions */
+function glowSprite(ra, dec, tint, scale, opacity, elong, rot) {
+  const mat = new THREE.SpriteMaterial({map: softDotTexture(), color: tint,
+    transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false});
+  const sp = new THREE.Sprite(mat);
+  sp.scale.set(scale * (elong || 1), scale, 1);
+  if (rot) mat.rotation = rot;
+  sp.position.copy(radecVec(ra, dec, R_SKY - 1));
+  sp.userData.glow = {op: opacity};
+  sky.add(sp);
+  return sp;
+}
+const glows = [
+  glowSprite(83.82, -5.39, 0x9fc8ec, 12, 0.38),   // M42, orion's sword
+  glowSprite(10.68, 41.27, 0xd8e2ee, 15, 0.26, 2.4, 35 * D2R), // M31, elongated smudge
+];
+
+/* layered teal depth — faint atmospheric glows in her sampled teals, never nebulae */
+[[20,40,0x084a68,95,.10],[200,30,0x09688c,80,.07],[300,-20,0x06374f,90,.09],[120,-12,0x084a68,85,.08]
+].forEach(([ra, dec, tint, sc, op]) => {
+  const g = glowSprite(ra, dec, tint, sc, op);
+  g.scale.y *= 0.62;
+  g.material.rotation = (ra * 7 + dec * 3) * D2R;
+});
+
+/* occasional shooting stars (round 37 retune, her call): a real
+   tapered streak — transparent tail feathering into a bright head —
+   instead of the old soft dot she never noticed. head at the
+   texture's right edge; the frame loop aims it in screen space. */
+function streakTexture() {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 32;
+  const x = c.getContext('2d');
+  const img = x.createImageData(256, 32);
+  for (let i = 0; i < 256; i++) {
+    const u = i / 255; // 0 = tail, 1 = head
+    const a = Math.pow(u, 2.4);
+    for (let j = 0; j < 32; j++) {
+      const v = Math.abs(j - 15.5) / 15.5;
+      const m = Math.pow(Math.max(0, 1 - v), 1.8);
+      const k = (j * 256 + i) * 4;
+      img.data[k] = 216; img.data[k + 1] = 237; img.data[k + 2] = 255;
+      img.data[k + 3] = Math.round(255 * a * m);
+    }
+  }
+  x.putImageData(img, 0, 0);
+  return new THREE.CanvasTexture(c);
+}
+const shooter = (() => {
+  const mat = new THREE.SpriteMaterial({map: streakTexture(), color: 0xffffff,
+    transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false});
+  const sp = new THREE.Sprite(mat);
+  sp.scale.set(22, 1.2, 1);
+  sp.visible = false;
+  sp.renderOrder = 4;
+  scene.add(sp);
+  return {sp, t: 0, dur: 0.85, active: false, next: 5 + Math.random() * 6,
+          from: new THREE.Vector3(), to: new THREE.Vector3()};
+})();
+function spawnShooter(dir) {
+  // pick a start point in the visible hemisphere, streak a short arc.
+  // the sprite is scaled to the arc's own world length, so the drawn
+  // streak spans tail-to-head at the path's scale; the frame loop
+  // trails the center half a length behind the head and aims the
+  // sprite along the path's SCREEN direction each frame.
+  const a = new THREE.Vector3().randomDirection();
+  if (a.dot(dir) < 0.25) a.addScaledVector(dir, 0.6).normalize();
+  const side = new THREE.Vector3().crossVectors(a, new THREE.Vector3().randomDirection()).normalize();
+  shooter.from.copy(a).multiplyScalar(R_SKY - 2);
+  shooter.to.copy(a).addScaledVector(side, 0.22).normalize().multiplyScalar(R_SKY - 2);
+  const len = shooter.from.distanceTo(shooter.to);
+  shooter.sp.scale.set(len * 1.05, Math.max(0.8, len * 0.05), 1);
+  shooter.t = 0; shooter.active = true;
+  shooter.sp.visible = true;
+  shooter.sp.position.copy(shooter.from);
+  shooter.next = 14 + Math.random() * 18; // occasional: one every ~15–30 s
+}
+
+/* ================= camera: north always up, the center never crosses a pole =================
+   Canonical state is (ra, dec, fov); fly-tos and zoom anchoring speak ra/dec.
+   Dragging rotates the view direction about the screen's own axes (grab the
+   sky, 1:1 under the finger everywhere — ra/dec drag steps distort near the
+   poles, which is exactly where home is), then ra/dec are re-derived.
+   Either way the center is clamped to dec ±89.5°, and the up vector is
+   parallel-transported as you drag (re-anchored to celestial north on
+   every fly-to), so the sky never whips, rolls, or flips — not even at
+   the poles — yet every degree of the sphere is reachable.
+   (Her calls 2026-10-15/16: free rotation flipped the sky and fought the
+   controls; the drag must track the finger.) Home is Polaris, centered. */
+const DEC_MAX = 89.5;
+// canonical up at home: the tangent of increasing dec at polaris itself —
+// "north" right at the pole, defined by the home meridian (ra 37.95).
+const HOME_UP = new THREE.Vector3(-Math.cos(37.95 * D2R), 0, Math.sin(37.95 * D2R)); // = -radecVec(37.95, 0) horizontal: the meridian tangent under the round-33 sign
+const view = {ra: 37.95, dec: 89.26, fov: MOB ? 88 : 92, dir: radecVec(37.95, 89.26, 1), up: HOME_UP.clone()};
+const HOME = {ra: view.ra, dec: view.dec, fov: view.fov, dir: view.dir.clone(), up: HOME_UP.clone()};
+function wrapRa(r) { return ((r % 360) + 360) % 360; }
+function wrapDelta(d) { return ((d + 540) % 360) - 180; }
+function clampDec(d) { return Math.min(DEC_MAX, Math.max(-DEC_MAX, d)); }
+function dirToRaDec(v) {
+  return {
+    ra: wrapRa(Math.atan2(-v.z, v.x) / D2R), // -z: inverse of the round-33 radecVec
+    dec: clampDec(Math.asin(Math.min(1, Math.max(-1, v.y))) / D2R)
+  };
+}
+function syncDir() { view.dir.copy(radecVec(view.ra, view.dec, 1)); }
+function celestialUp(dir) {
+  const up = new THREE.Vector3(0, 1, 0);
+  const u = up.addScaledVector(dir, -up.dot(dir));
+  if (u.lengthSq() < 1e-6) u.set(1, 0, 0);
+  return u.normalize();
+}
+function applyView() {
+  camera.position.copy(view.dir).multiplyScalar(-8);
+  // parallel transport: the view keeps a persistent up vector; each frame
+  // it is only re-orthogonalized against the current direction, so it
+  // rotates by the least amount the motion forces. deriving up fresh from
+  // the pole every frame (the old way) made the whole sky wheel around
+  // whenever the view wandered near a pole — home IS the pole — which read
+  // as continuous flipping on her phone (her report 2026-10-17). fly-tos
+  // re-anchor up to celestial north at the destination (targetUpFor).
+  view.up.addScaledVector(view.dir, -view.up.dot(view.dir));
+  if (view.up.lengthSq() < 1e-8) view.up.copy(celestialUp(view.dir));
+  view.up.normalize();
+  camera.up.copy(view.up);
+  camera.lookAt(0, 0, 0);
+  camera.fov = view.fov;
+  camera.updateProjectionMatrix();
+}
+let fly = null;
+function targetUpFor(dir) {
+  // the canonical orientation at a destination: celestial north up. within
+  // 4° of a pole that degenerates (north has no direction of its own
+  // there), so the meridian tangent is used — the same convention as
+  // home's up at polaris.
+  const y = Math.min(1, Math.max(-1, dir.y));
+  if (Math.abs(y) > Math.sin(86 * D2R)) {
+    const ra = Math.atan2(-dir.z, dir.x), s = Math.sign(y) || 1;
+    return new THREE.Vector3(-Math.cos(ra) * s, 0, Math.sin(ra) * s); // -radecVec(ra, 0) * s under the round-33 sign
+  }
+  return celestialUp(dir);
+}
+function flyToDir(dir, fov, dur, onDone) {
+  noteSuccess(); // a flight means the sky is being navigated — the help glow stands down
+  closeHowto(); // and the how-to card gets out of the way of the flight
+  closePanel(); closeLog(); closeMenu();
+  fov = Math.min(115, Math.max(3, fov)); // floor 3: the pleiades fit lands ~3.4 (2026-11-03)
+  const t = dirToRaDec(dir);
+  const up1 = targetUpFor(dir);
+  if (RM) {
+    view.ra = t.ra; view.dec = t.dec; view.fov = fov; view.up.copy(up1);
+    syncDir(); applyView(); updateBackbtn(); if (onDone) onDone(); return;
+  }
+  // fly along ra/dec (shortest way around in ra): the path rides meridians
+  // instead of a great-circle swing, and the up vector eases to the
+  // destination's canonical north-up along the way.
+  fly = {ra0: view.ra, dec0: view.dec, dRa: wrapDelta(t.ra - view.ra), dec1: t.dec,
+         f0: view.fov, f1: fov, up0: view.up.clone(), up1,
+         t0: performance.now(), dur: dur || 1500, done: onDone || null};
+}
+/* neat framing (her call 2026-10-30: "when I click a constellation it
+   should neatly zoom in a place where all the stars are visible"): the
+   landing fov is SOLVED per figure from its real star positions and the
+   screen's actual aspect, so every star lands inside the safe area. The
+   old fixed table (30° for most figures) silently cropped wide figures —
+   pegasus spans ~39° and a portrait phone's horizontal fov is a fraction
+   of its vertical one. */
+const _fitCam = new THREE.PerspectiveCamera(30, 1, 0.1, 500);
+const _fv = new THREE.Vector3();
+const _sv = new THREE.Vector3(), _sv2 = new THREE.Vector3(); // shooting-star scratch
+/* deep-zoom label anchors (2026-11-03): at the deep tier a label sits
+   on the side of its star AWAY from its figure's centroid — spokes, not
+   a pile under the cluster. deepDir returns that bearing + distance, or
+   null to keep the atlas below-anchor (centroid off-screen, or the star
+   sits nearly on it). The bearing is a pure function of the sky
+   geometry each frame, so the label is as fixed in the sphere as the
+   below-anchor — it cannot glide or flip sides. anchorFit then rotates
+   the bearing (never reflects it) by the smallest step that keeps the
+   label box on screen — an edge star's outward label would otherwise
+   leave the frame entirely. Shared by the placer and the fit. */
+function deepDir(sx, sy, ccx, ccy, w, h, screenR, centroidOnScreen) {
+  let bx = sx - ccx, by = sy - ccy;
+  const bl = Math.hypot(bx, by);
+  if (!centroidOnScreen || bl <= 24) return null;
+  bx /= bl; by /= bl;
+  const ext = (Math.abs(bx) * w + Math.abs(by) * h) / 2;
+  return {bx, by, d: (screenR || 12) / 2 + 8 + ext};
+}
+function anchorFit(sx, sy, bx, by, d, w, h, B) {
+  const a0 = Math.atan2(by, bx);
+  const at = (a) => {
+    const x = sx + Math.cos(a) * d, y = sy + Math.sin(a) * d;
+    return (x - w / 2 >= B.l && x + w / 2 <= B.r &&
+            y - h / 2 >= B.t && y + h / 2 <= B.b) ? {x, y} : null;
+  };
+  const first = at(a0);
+  if (first) return first;
+  for (let k = 1; k <= 12; k++) {
+    const da = k * Math.PI / 12;
+    const c1 = at(a0 + da); if (c1) return c1;
+    const c2 = at(a0 - da); if (c2) return c2;
+  }
+  return {x: sx + bx * d, y: sy + by * d}; // nothing fits: original spot (the placer then hides it)
+}
+function fitFovFor(dir, stars) {
+  const cx = W / 2, cy = H / 2;
+  const safeT = MOB ? 140 : 92;
+  // the horizontal fit margin carries the labels, not just the stars
+  // (round 19): a star 8px from the edge can never show the ~90px-wide
+  // label that hangs beside it — edge stars landed label-less. 42px of
+  // margin buys the label half-width; the landing zooms a touch wider.
+  const hw = Math.min(cx - 42, W - 42 - cx) * 0.97;
+  const hh = Math.min(cy - safeT, H - 118 - cy) * 0.97;
+  _fitCam.aspect = W / H;
+  _fitCam.position.copy(dir).multiplyScalar(-8);
+  _fitCam.up.copy(targetUpFor(dir));
+  _fitCam.lookAt(0, 0, 0);
+  _fitCam.updateMatrixWorld(true); // project() reads matrixWorldInverse; no renderer updates a scratch camera
+  const proj = (fov) => {
+    _fitCam.fov = fov; _fitCam.updateProjectionMatrix();
+    return stars.map(st => {
+      _fv.copy(st.vec).project(_fitCam);
+      return {st, behind: _fv.z > 1,
+        x: (_fv.x * 0.5 + 0.5) * W, y: (-_fv.y * 0.5 + 0.5) * H};
+    });
+  };
+  const starFits = (fov) => proj(fov).every(p =>
+    !p.behind && Math.abs(p.x - cx) <= hw && Math.abs(p.y - cy) <= hh);
+  const searchFit = (fitsFn) => {
+    if (fitsFn(2.5)) return 2.5;
+    if (!fitsFn(110)) return 110;
+    let lo = 2.5, hi = 110;
+    for (let i = 0; i < 22; i++) {
+      const mid = (lo + hi) / 2;
+      if (fitsFn(mid)) hi = mid; else lo = mid;
+    }
+    return hi;
+  };
+  // the search must reach the tight clusters: the pleiades' true fit is
+  // ~3° — a 9° floor here shipped a landing 3× too wide (her report
+  // 2026-11-03: "this view is too small").
+  const starFit = searchFit(starFits);
+  // tight clusters keep the ORIGINAL tight fit (round 17, verified):
+  // the 42px label margin above is for constellation landings — fed
+  // through the cluster path it widened the pleiades landing to 4.1°
+  // and cost three labels. Two rects, two jobs.
+  const hwT = Math.min(cx - 8, W - 8 - cx) * 0.97;
+  const starFitTight = searchFit((fov) => proj(fov).every(p =>
+    !p.behind && Math.abs(p.x - cx) <= hwT && Math.abs(p.y - cy) <= hh));
+  // wide figures keep the star-only fit (round 16, verified). Only a
+  // tight cluster's landing is label-critical: there the fit must ALSO
+  // frame the captions (her words: "all the stars visible WITH the
+  // correct captions"), so search a little wider for a fov where every
+  // labeled star's label lands on screen at its placer anchor. (Doing
+  // this at all fovs is non-monotonic — the label tier changes at 44 —
+  // and it dragged wide figures out to the tier boundary.)
+  if (starFitTight >= 20) {
+    // constellation landings (round 20, her call): labels hang DIRECTLY
+    // under their stars — no swung anchors — so frame them that way.
+    // scan a window around the star fit and land where the most
+    // below-labels fit (see scoreFit below). metrics are the tier-1
+    // approximations; the placer remains the truth.
+    if (starFit >= 20 && starFit < 64) {
+      const B1 = {l: 4, r: W - 4, t: safeT, b: H - 118};
+      const belowRects = (fov) => {
+        const rects = [];
+        // the star's expected on-screen diameter AT this fov (round 23:
+        // the fit used to assume the 76px cap for every star — with the
+        // smaller size law that pushed predicted labels ~25px too low)
+        const zkF = Math.min(1.6, Math.max(0.08,
+          Math.pow(Math.tan(fov * D2R / 2) / Math.tan(12.5 * D2R), 2)));
+        const ppwF = (H / 2) / (Math.tan(fov * D2R / 2) * R_SKY);
+        for (const p of proj(fov)) {
+          if (p.behind || Math.abs(p.x - cx) > hw || Math.abs(p.y - cy) > hh) return null;
+          const st = p.st;
+          if (st.observer || !(st.interest || st.repo !== undefined ||
+              st.painting !== undefined || st.about !== undefined)) continue;
+          const isMin = st.repo !== undefined || st.painting !== undefined || st.about !== undefined;
+          const thTxt = starSubtitle(st) || '';
+          const w = Math.max(st.n.length * (isMin ? 10.5 : 12),
+            thTxt.length * (isMin ? 6.1 : 6.8)) + 34;
+          const h = isMin ? 40 : 44;
+          const dia = Math.min(st.baseScale * zkF * ppwF, st.hero ? 76 : 46);
+          rects.push({x: p.x, y: p.y + dia / 2 + 10 + h / 2, w, h,
+            pri: starPriority(st), mag: st.mag === undefined ? 9 : st.mag});
+        }
+        return rects;
+      };
+      // the fixed chrome, from the CSS (zoomctl: left 1-1.2rem, bottom
+      // 9.4rem, two 44px buttons + gap; backbtn: top 4.75/4.1rem —
+      // directly under the title since round 21 (her call) —
+      // ~190px wide, 44 tall). the placer refuses labels under these;
+      // the fit must refuse the same landings or it approves a fov
+      // whose labels the placer then hides (arcturus, round 20 QA).
+      const zrF = {l: MOB ? 16 : 19.2, t: H - 246.4, r: (MOB ? 16 : 19.2) + 44, b: H - 150.4};
+      const hitsF = (r, c) => r.x + r.w / 2 > c.l - 10 && r.x - r.w / 2 < c.r + 10 &&
+        r.y + r.h / 2 > c.t - 10 && r.y - r.h / 2 < c.b + 10;
+      // score, don't gate: some figures (the dipper's handle, lyra's
+      // core) cannot hang every label under its star at ANY fov on a
+      // phone screen — the stars sit closer than the labels are wide.
+      // so count how many below-labels a candidate fov carries
+      // (greedy, in the placer's priority order) and land on the best
+      // count nearest the star fit. every label that shows hangs
+      // directly under its star; the rest appear as she pans.
+      const scoreFit = (fov) => {
+        const rs = belowRects(fov);
+        if (!rs) return -1;
+        rs.sort((a, b) => a.pri - b.pri || a.mag - b.mag);
+        const kept = [];
+        for (const r of rs) {
+          if (r.x - r.w / 2 < B1.l || r.x + r.w / 2 > B1.r ||
+              r.y - r.h / 2 < B1.t || r.y + r.h / 2 > B1.b) continue;
+          if (hitsF(r, zrF)) continue;
+          let bad = false;
+          for (const k of kept) {
+            if (Math.abs(r.x - k.x) < (r.w + k.w) / 2 + 6 &&
+                Math.abs(r.y - k.y) < (r.h + k.h) / 2 + 4) { bad = true; break; }
+          }
+          if (!bad) kept.push(r);
+        }
+        return kept.length;
+      };
+      const total = belowRects(starFit) ? belowRects(starFit).length : 0;
+      let bestFov = starFit, bestScore = scoreFit(starFit);
+      if (bestScore < total) {
+        const factors = [1.03, 0.97, 1.06, 0.94, 1.12, 1.18, 1.25, 1.33, 1.42, 1.52];
+        for (const k of factors) {
+          const fov = starFit * k;
+          if (fov < 20 || fov >= 64) continue;
+          const s = scoreFit(fov);
+          if (s > bestScore) { bestScore = s; bestFov = fov; if (s >= total) break; }
+        }
+      }
+      return bestFov;
+    }
+    return starFit;
+  }
+  const cenVec = (stars[0] && stars[0].f) ? stars[0].f.centroid : dir;
+  const B = {l: 4, r: W - 4, t: safeT, b: H - 118};
+  const labelFits = (fov) => {
+    _fv.copy(cenVec).multiplyScalar(R_SKY);
+    _fitCam.fov = fov; _fitCam.updateProjectionMatrix();
+    _fv.project(_fitCam);
+    const ccx = (_fv.x * 0.5 + 0.5) * W, ccy = (-_fv.y * 0.5 + 0.5) * H;
+    for (const p of proj(fov)) {
+      if (p.behind || Math.abs(p.x - cx) > hwT || Math.abs(p.y - cy) > hh) return false;
+      const st = p.st;
+      if (st.observer || !(st.interest || st.about || st.repo || st.painting)) continue;
+      const w = 26 + st.n.length * 11, h = 24; // mini-tier metrics, approximated (round 24: widened toward the real measure — the predicate kept passing fits the live placer failed)
+      // expected spoke distance from the star's REAL size at this fov
+      // (round 23: was the 76px cap for every star — anchors landed
+      // ~50px too far out and edge labels failed their bounds)
+      const zkT = Math.min(1.6, Math.max(0.08,
+        Math.pow(Math.tan(fov * D2R / 2) / Math.tan(12.5 * D2R), 2)));
+      const ppwT = (H / 2) / (Math.tan(fov * D2R / 2) * R_SKY);
+      const sr = Math.min(st.baseScale * zkT * ppwT, st.hero ? 76 : 46) / 2 + 10;
+      const dv = deepDir(p.x, p.y, ccx, ccy, w, h, sr, true);
+      const bx = dv ? dv.bx : 0, by = dv ? dv.by : 1;
+      const d = dv ? dv.d : sr + 10 + h / 2;
+      const c = anchorFit(p.x, p.y, bx, by, d, w, h, B);
+      if (c.x - w / 2 < B.l || c.x + w / 2 > B.r ||
+          c.y - h / 2 < B.t || c.y + h / 2 > B.b) return false;
+    }
+    return true;
+  };
+  if (!labelFits(20)) return starFitTight;
+  let lo = starFitTight, hi = 20;
+  for (let i = 0; i < 18; i++) {
+    const mid = (lo + hi) / 2;
+    if (labelFits(mid)) hi = mid; else lo = mid;
+  }
+  return hi;
+}
+function figureFit(f) {
+  // the cap is the home fov: a wide figure on a portrait phone (pegasus
+  // spans ~39°) can only fit whole by zooming nearly all the way out —
+  // that IS the neat framing she asked for, not a failure to zoom.
+  const fov = f.stars.length <= 1 ? 26 :
+    Math.min(MOB ? 88 : 92, Math.max(3, fitFovFor(f.centroid, f.stars)));
+  return {dir: f.centroid.clone(), fov};
+}
+/* the centered title's footprint (round 37). the name sits dead
+   center; this rect — sized from the figure's own name — is what
+   the live label placer routes around while a title is up. */
+function titleRect(f) {
+  const fs = MOB ? 35 : 45; // .ft-nm px (2.2rem mobile / 2.8rem desktop)
+  const w = Math.min(W - 20, (f ? f.cname.length : 10) * fs * 0.62 + 52);
+  const h = fs * 1.12 + 36;
+  return {x: W / 2 - w / 2, y: H / 2 - h / 2, w, h,
+          left: W / 2 - w / 2, right: W / 2 + w / 2, top: H / 2 - h / 2, bottom: H / 2 + h / 2};
+}
+function flyTarget(name) {
+  if (name === 'home') return {dir: HOME.dir.clone(), fov: HOME.fov};
+  if (name === 'dipper') {
+    const uma = FIGURES.find(f => f.id === 'uma');
+    const dir = radecVec(186, 55, 1);
+    return {dir, fov: Math.min(MOB ? 88 : 92, Math.max(3, fitFovFor(dir, uma.stars)))};
+  }
+  const f = FIGURES.find(f => f.id === name || f.cname.toLowerCase() === name);
+  if (f) return figureFit(f); // 'polaris' lands here too: the umi figure, centered like every other
+  return null;
+}
+function flyTo(name) {
+  const t = flyTarget(name);
+  if (t) flyToDir(t.dir, t.fov, 1500);
+}
+function zoomBy(k, cx, cy) {
+  const before = cx !== undefined ? dirToRaDec(screenToDir(cx, cy)) : null;
+  view.fov = Math.min(115, Math.max(3, view.fov * k));
+  syncDir(); applyView();
+  if (before) { // keep the point under the cursor — adjust in ra/dec only
+    for (let i = 0; i < 2; i++) {
+      const after = dirToRaDec(screenToDir(cx, cy));
+      view.ra = wrapRa(view.ra + wrapDelta(before.ra - after.ra));
+      view.dec = clampDec(view.dec + (before.dec - after.dec));
+      syncDir(); applyView();
+    }
+  }
+  idleT = 0;
+  updateBackbtn();
+}
+function screenToDir(px, py) {
+  const v = new THREE.Vector3((px / W) * 2 - 1, -(py / H) * 2 + 1, 0.5);
+  v.unproject(camera);
+  return v.sub(camera.position).normalize();
+}
+function updateBackbtn() {} // the return-to-the-sky button is gone (round 24, her call); calls remain as no-ops
+
+/* ================= interaction: drag-spin with inertia, wheel/pinch zoom, tap ================= */
+const pointers = new Map();
+let downAt = null, downT = 0, moved = 0, vel = {x: 0, y: 0}, rotX = 0, rotY = 0;
+let trackHist = []; // recent pointer samples for release-velocity (windowed, robust to event spacing)
+let pinchD0 = 0, pinchF0 = 0, idleT = 0;
+let tapTimer = null, tapCount = 0, tapXY = null;
+
+function clampOffPole() {
+  // keep the view center off the polar caps: it may touch dec ±89.5° but
+  // never cross a pole. if a step overshoots, the center slides back onto
+  // the cap circle along its heading — and if the step actually crossed
+  // (heading flipped vs the stored ra), the approach heading is kept, so
+  // the sky stops at the pole instead of going over the top and flipping.
+  const maxY = Math.sin(DEC_MAX * D2R);
+  if (Math.abs(view.dir.y) <= maxY) return;
+  const s = Math.sign(view.dir.y);
+  let hx = view.dir.x, hz = view.dir.z;
+  let hl = Math.hypot(hx, hz);
+  if (hl < 1e-9) { hx = Math.cos(view.ra * D2R); hz = -Math.sin(view.ra * D2R); hl = 1; }
+  const px = Math.cos(view.ra * D2R), pz = -Math.sin(view.ra * D2R); // horizontal of radecVec(ra, 0) under the round-33 sign
+  if ((hx * px + hz * pz) / hl < 0) { hx = px; hz = pz; hl = 1; }
+  const ch = Math.cos(DEC_MAX * D2R);
+  view.dir.set(hx / hl * ch, s * maxY, hz / hl * ch);
+}
+function rotateView(dx, dy) {
+  // true 1:1 finger tracking, everywhere on screen: the drag rotates the
+  // view direction about the screen's own axes, like grabbing the sky, in
+  // small substeps — so a star stays under your finger at the pole (where
+  // ra/dec steps distort) just as well as at the equator. ra/dec state is
+  // re-derived from the result; fly-tos and zoom anchoring still speak
+  // ra/dec, and the pole clamp keeps every path flip-free.
+  const rppY = (view.fov * D2R) / H;
+  const hfov = 2 * Math.atan(Math.tan(view.fov * D2R / 2) * W / H);
+  const rppX = hfov / W;
+  const n = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 3));
+  const sx = dx / n, sy = dy / n;
+  for (let i = 0; i < n; i++) {
+    const up = view.up; // the transported screen-up, not a fresh pole derivation
+    const right = new THREE.Vector3().crossVectors(view.dir, up).normalize();
+    const tUp = new THREE.Vector3().crossVectors(right, view.dir).normalize();
+    view.dir.applyAxisAngle(tUp, -sx * rppX).applyAxisAngle(right, -sy * rppY);
+    clampOffPole();
+  }
+  const rd = dirToRaDec(view.dir);
+  view.ra = rd.ra; view.dec = rd.dec;
+  applyView();
+}
+canvas.addEventListener('pointerdown', e => {
+  pointers.set(e.pointerId, {x: e.clientX, y: e.clientY});
+  try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+  fly = null; vel.x = vel.y = 0; idleT = 0;
+  if (pointers.size === 2) {
+    const [a, b] = [...pointers.values()];
+    pinchD0 = Math.hypot(a.x - b.x, a.y - b.y);
+    pinchF0 = view.fov;
+    downAt = null;
+    return;
+  }
+  downAt = {x: e.clientX, y: e.clientY}; downT = performance.now();
+  rotX = e.clientX; rotY = e.clientY; moved = 0;
+  trackHist = [{t: performance.now(), x: e.clientX, y: e.clientY}];
+});
+canvas.addEventListener('pointermove', e => {
+  if (pointers.has(e.pointerId)) pointers.set(e.pointerId, {x: e.clientX, y: e.clientY});
+  if (pointers.size === 2) {
+    const [a, b] = [...pointers.values()];
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (pinchD0 > 0 && d > 0) {
+      const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      const k = pinchD0 / d;
+      view.fov = Math.min(115, Math.max(3, pinchF0 * k));
+      applyView(); updateBackbtn();
+    }
+    return;
+  }
+  if (downAt) {
+    const nowM = performance.now();
+    moved = Math.max(moved, Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y));
+    if (moved > 6) {
+      // rotate by the full travel since the last applied rotation — the
+      // sub-threshold pixels are not eaten, so tracking starts at 1:1 from
+      // the finger's first pixel, not from the threshold crossing.
+      rotateView(e.clientX - rotX, e.clientY - rotY);
+      rotX = e.clientX; rotY = e.clientY;
+      trackHist.push({t: nowM, x: e.clientX, y: e.clientY});
+      while (trackHist.length > 2 && nowM - trackHist[0].t > 120) trackHist.shift();
+      updateBackbtn();
+    }
+  } else if (!fly) {
+    const s = hitStar(e.clientX, e.clientY);
+    canvas.style.cursor = s ? 'pointer' : 'default';
+  }
+});
+function capHit(px, py) {
+  // which figure's caption (if any) sits under this point? captions are
+  // click-through; their rects are tracked in labelBoxes every frame.
+  for (const b of labelBoxes) {
+    if (!b.n.startsWith('cap:')) continue;
+    if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) {
+      return FIGURES.find(f => 'cap:' + f.id === b.n) || null;
+    }
+  }
+  return null;
+}
+function endPointer(e) {
+  pointers.delete(e.pointerId);
+  if (pointers.size < 2) pinchD0 = 0;
+  // a phone tap wobbles — allow real fingertip travel before the gesture
+  // stops counting as a tap (was 8px; her call 2026-10-30).
+  if (downAt && moved < (MOB ? 16 : 10) && performance.now() - downT < 500 && !fly) {
+    // zoom, then the option for detail (her call 2026-11-05): from far
+    // out, any tap on a constellation — its caption, or a star sitting
+    // under the caption (alioth, when she tapped URSA MAJOR) — flies to
+    // the constellation and shows all its stars. the detail panel is
+    // for taps made once you're in the view, caption overlap or not.
+    const s = hitStar(e.clientX, e.clientY);
+    if (s) {
+      tapCount = 0; clearTimeout(tapTimer);
+      const f = s.f;
+      let zoomFirst = false;
+      if (f && f.stars.length > 1) {
+        const t = figureFit(f);
+        // "in the view" means AT the figure, not merely at a similar
+        // fov (round 29): leo fits at 78.8deg, within 1.3x of the
+        // home fov — so from home, taps on regulus skipped the zoom
+        // and opened geology directly, and leo never got its title.
+        // the direction test is the arbiter now.
+        const atFig = view.dir.angleTo(t.dir) < t.fov * D2R * 0.35;
+        if (!atFig || view.fov > t.fov * 1.3) { flyToDir(t.dir, t.fov, 1400); zoomFirst = true; }
+      }
+      if (!zoomFirst) tapStar(s);
+    }
+    else {
+      const capF = capHit(e.clientX, e.clientY);
+      if (capF) {
+        tapCount = 0; clearTimeout(tapTimer);
+        const t = figureFit(capF); flyToDir(t.dir, t.fov, 1400);
+      }
+      else {
+        tapCount++; tapXY = {x: e.clientX, y: e.clientY};
+        clearTimeout(tapTimer);
+        if (tapCount === 2) {
+          tapCount = 0;
+          if (view.fov > 50) flyToDir(screenToDir(tapXY.x, tapXY.y), Math.max(14, view.fov / 1.8), 700);
+          else flyToDir(view.dir.clone(), HOME.fov, 700);
+        } else tapTimer = setTimeout(() => { tapCount = 0; }, 300);
+      }
+    }
+  }
+  downAt = null; idleT = 0;
+  // release velocity = actual recent motion over a ~120ms window (px/frame).
+  // robust to event spacing: slow drags get gentle momentum, flicks get more.
+  const nH = trackHist.length;
+  if (nH >= 2) {
+    const a = trackHist[0], b = trackHist[nH - 1];
+    const dtm = Math.max(16, b.t - a.t);
+    vel.x = (b.x - a.x) / dtm * 16.7;
+    vel.y = (b.y - a.y) / dtm * 16.7;
+  } else { vel.x = 0; vel.y = 0; }
+  trackHist = [];
+  // gentle, controlled momentum: cap the release speed, frame() decays it
+  const sp = Math.hypot(vel.x, vel.y);
+  if (sp > 24) { vel.x *= 24 / sp; vel.y *= 24 / sp; }
+}
+canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('pointercancel', endPointer);
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  if (fly) fly = null;
+  zoomBy(Math.exp(e.deltaY * 0.0012), e.clientX, e.clientY);
+}, {passive: false});
+document.getElementById('zin').addEventListener('click', () => zoomBy(1/1.5));
+document.getElementById('zout').addEventListener('click', () => zoomBy(1.5));
+
+/* ================= the menu ================= */
+const menuEl = document.getElementById('menu');
+const menuBody = document.getElementById('menuBody');
+let menuOpen = false;
+function menuItem(name, sub, fn) {
+  const b = document.createElement('button');
+  b.className = 'menu-item';
+  const n = document.createElement('span'); n.className = 'mn'; n.textContent = name;
+  const s = document.createElement('span'); s.className = 'ms'; s.textContent = sub;
+  b.append(n, s);
+  b.addEventListener('click', fn);
+  return b;
+}
+function menuSec(title) {
+  const d = document.createElement('div');
+  d.className = 'menu-sec';
+  const h = document.createElement('h3'); h.textContent = title;
+  d.appendChild(h);
+  return d;
+}
+function buildMenu() {
+  menuBody.innerHTML = '';
+  // start here: polaris first, per her instruction
+  const start = menuSec('start here');
+  start.appendChild(menuItem('polaris', 'introduction', () => { closeMenu(); gotoPolaris(); }));
+  menuBody.appendChild(start);
+  // sky: constellations
+  const sky = menuSec('the sky');
+  for (const f of FIGURES) {
+    const label = f.cname.charAt(0) + f.cname.slice(1).toLowerCase();
+    sky.appendChild(menuItem(label, f.sub, () => {
+      closeMenu();
+      { const t = figureFit(f); flyToDir(t.dir, t.fov, 1400); }
+    }));
+  }
+  menuBody.appendChild(sky);
+  // interests: content destinations
+  const intr = menuSec('interests');
+  const dests = [
+    ['about me', 'nine facets', 'ple'],
+    ['digital art', 'nine paintings', 'lyr'],
+    ['fabric arts', 'embroidery + more', 'boo'],
+    ['jewelry', 'the collection', 'ori'],
+    ['photography', 'photos to come', 'aql'],
+    ['geology', 'thin sections', 'leo'],
+    ['hire me', 'freelance builds', 'cas'],
+    ['writing', 'essays + reviews', 'peg'],
+    ['tech projects', 'eight repositories', 'dipper'],
+  ];
+  for (const [name, sub, tgt] of dests) {
+    intr.appendChild(menuItem(name, sub, () => { closeMenu(); flyTo(tgt); }));
+  }
+  menuBody.appendChild(intr);
+  // observer's log
+  const obs = menuSec('the observer');
+  obs.appendChild(menuItem("observer's log", "field notes", () => { closeMenu(); openLog(); }));
+  menuBody.appendChild(obs);
+}
+function openMenu() {
+  buildMenu();
+  menuEl.hidden = false;
+  requestAnimationFrame(() => menuEl.classList.add('open'));
+  menuOpen = true;
+}
+function closeMenu() {
+  menuEl.classList.remove('open');
+  menuOpen = false;
+  setTimeout(() => { if (!menuOpen) menuEl.hidden = true; }, 480);
+}
+/* menu/log buttons removed (round 26) — openMenu/openLog stay for a future door */
+document.getElementById('menuClose').addEventListener('click', closeMenu);
+function gotoPolaris() {
+  const t = flyTarget('polaris');
+  if (t) flyToDir(t.dir, t.fov, 1500, () => openInterest('prachi', 'polaris · start here'));
+}
+document.getElementById('polarislink').addEventListener('click', e => {
+  e.preventDefault();
+  gotoPolaris();
+});
+
+/* ---------- the cursor IS the pleiades (desktop hover + touch fingertip) ---------- */
+(function pleiadesCursor() {
+  const wrap = document.getElementById('cursor');
+  const cv2 = document.getElementById('cursorCv');
+  const x = cv2.getContext('2d');
+  // the 7 brightest, in their true relative pattern
+  const seven = contentStars.filter(s => s.f.id === 'ple' &&
+    ['Alcyone','Atlas','Electra','Maia','Merope','Taygeta','Pleione'].includes(s.n));
+  const ras = seven.map(s => s.ra), decs = seven.map(s => s.dec);
+  const r0 = Math.min(...ras), r1 = Math.max(...ras), d0 = Math.min(...decs), d1 = Math.max(...decs);
+  const pad = 26, W2 = 132;
+  const k = (W2 - pad * 2) / Math.max(r1 - r0, (d1 - d0) * 1.4);
+  const cx0 = (r0 + r1) / 2, cy0 = (d0 + d1) / 2;
+  const pts = seven.map(s => ({
+    x: W2/2 + (cx0 - s.ra) * k * Math.cos(24 * D2R),
+    y: W2/2 - (s.dec - cy0) * k,
+    r: Math.max(1.6, 4.6 * Math.pow(10, -0.22 * (s.mag - 2.87)))
+  }));
+  function drawCursor(t) {
+    x.clearRect(0, 0, W2, W2);
+    const pulse = 1 + 0.06 * Math.sin(t * 2.2);
+    for (const p of pts) {
+      const r = p.r * pulse;
+      const g = x.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3.2);
+      g.addColorStop(0, 'rgba(228,240,255,.9)');
+      g.addColorStop(0.4, 'rgba(228,240,255,.28)');
+      g.addColorStop(1, 'rgba(228,240,255,0)');
+      x.fillStyle = g;
+      x.beginPath(); x.arc(p.x, p.y, r * 3.2, 0, 7); x.fill();
+      x.strokeStyle = 'rgba(235,245,255,.85)'; x.lineWidth = 1; x.lineCap = 'round';
+      x.beginPath();
+      x.moveTo(p.x - r * 1.7, p.y); x.lineTo(p.x + r * 1.7, p.y);
+      x.moveTo(p.x, p.y - r * 1.7); x.lineTo(p.x, p.y + r * 1.7);
+      x.stroke();
+      x.fillStyle = '#f4f9ff';
+      x.beginPath(); x.arc(p.x, p.y, Math.max(1, r * 0.42), 0, 7); x.fill();
+    }
+  }
+  let mx = -200, my = -200, px = -200, py = -200, shown = false, op = 0, touching = false;
+  // desktop: the cluster follows the mouse
+  if (matchMedia('(hover:hover) and (pointer:fine)').matches) {
+    addEventListener('pointermove', e => {
+      if (e.pointerType === 'touch') return;
+      mx = e.clientX; my = e.clientY;
+      shown = true;
+    });
+    document.addEventListener('mouseleave', () => { shown = false; });
+  }
+  // touch: the cluster rides the fingertip while a touch is active
+  addEventListener('touchstart', e => {
+    const t = e.touches[0]; if (!t) return;
+    mx = t.clientX; my = t.clientY; px = mx; py = my; // land exactly, no lag jump
+    shown = true; touching = true;
+  }, {passive: true});
+  addEventListener('touchmove', e => {
+    const t = e.touches[0]; if (!t) return;
+    mx = t.clientX; my = t.clientY;
+  }, {passive: true});
+  const touchEnd = e => { if (e.touches.length === 0) { shown = false; touching = false; } };
+  addEventListener('touchend', touchEnd);
+  addEventListener('touchcancel', touchEnd);
+  (function follow() {
+    requestAnimationFrame(follow);
+    // while a finger is down the cluster sits exactly on the fingertip —
+    // no trailing (a lagging cluster felt like a miscalibrated control pad,
+    // her report 2026-10-16). the soft lag is desktop-mouse only.
+    if (touching) { px = mx; py = my; }
+    else { px += (mx - px) * 0.16; py += (my - py) * 0.16; }
+    op += ((shown ? 1 : 0) - op) * 0.25; // gentle fade in/out
+    wrap.style.opacity = op < 0.02 ? '0' : op.toFixed(3);
+    wrap.style.transform = `translate(${px - 66}px,${py - 66}px)`;
+    if (op > 0.02) drawCursor(performance.now() / 1000);
+  })();
+})();
+
+/* the how-to card, the help button, the struggle glow, and the
+   tonight line (round 37, her calls). the card greets every visit
+   and leaves on ✕; "?" brings it back. if a visitor's drags keep
+   reversing, or they keep grabbing at the sky without ever flying
+   anywhere or opening anything, the "?" starts to glow — a quiet
+   offer of help that clears the moment something works. tonight is
+   computed from the date, never stale, no network: the moon from
+   real sun/moon positions, and the annual meteor-shower calendar. */
+const howtoEl = document.getElementById('howto');
+const helpBtn = document.getElementById('helpbtn');
+function openHowto() { howtoEl.classList.add('show'); document.body.classList.add('howto-open'); helpBtn.classList.remove('glow'); resetStruggle(); }
+function closeHowto() { howtoEl.classList.remove('show'); document.body.classList.remove('howto-open'); }
+document.getElementById('howtox').addEventListener('click', e => { e.stopPropagation(); closeHowto(); });
+helpBtn.addEventListener('click', e => { e.stopPropagation(); openHowto(); });
+if (window.BOOT) BOOT.then(() => setTimeout(openHowto, 900)); else setTimeout(openHowto, 900);
+(function tonight() {
+  const now = new Date();
+  // the moon from real sun/moon positions (the compact suncalc
+  // model): a mean-cycle count off a 2000 epoch ran ~6 points
+  // bright against the catalogs (14% vs the true 8% on 2026-11-06);
+  // this lands on them — new moon 2026-11-09 07:02 UTC reads 0.0%,
+  // the Nov 24 full moon 100%.
+  const rad = Math.PI / 180, J1970 = 2440588, J2000 = 2451545, _e = rad * 23.4397;
+  const d = now.valueOf() / 864e5 - 0.5 + J1970 - J2000;
+  const Ms = rad * (357.5291 + 0.98560028 * d);
+  const Ls = Ms + rad * (1.9148 * Math.sin(Ms) + 0.02 * Math.sin(2 * Ms) + 0.0003 * Math.sin(3 * Ms)) + rad * 102.9372 + Math.PI;
+  const sDec = Math.asin(Math.sin(Ls) * Math.sin(_e)), sRa = Math.atan2(Math.sin(Ls) * Math.cos(_e), Math.cos(Ls));
+  const Lm = rad * (218.316 + 13.176396 * d), Mm = rad * (134.963 + 13.064993 * d), Fm = rad * (93.272 + 13.350350 * d);
+  const lm = Lm + rad * 6.289 * Math.sin(Mm), bm = rad * 5.128 * Math.sin(Fm), mDist = 385001 - 20905 * Math.cos(Mm);
+  const mRa = Math.atan2(Math.sin(lm) * Math.cos(_e) - Math.sin(bm) * Math.sin(_e), Math.cos(lm));
+  const mDec = Math.asin(Math.sin(bm) * Math.cos(_e) + Math.cos(bm) * Math.sin(_e) * Math.sin(lm));
+  const sDist = 149598000;
+  const phi = Math.acos(Math.sin(sDec) * Math.sin(mDec) + Math.cos(sDec) * Math.cos(mDec) * Math.cos(sRa - mRa));
+  const inc = Math.atan2(sDist * Math.sin(phi), mDist - sDist * Math.cos(phi));
+  const ang = Math.atan2(Math.cos(sDec) * Math.sin(sRa - mRa), Math.sin(sDec) * Math.cos(mDec) - Math.cos(sDec) * Math.sin(mDec) * Math.cos(sRa - mRa));
+  const illum = Math.round((1 + Math.cos(inc)) / 2 * 100);
+  const cyc = 0.5 + 0.5 * inc * (ang < 0 ? -1 : 1) / Math.PI; // 0 = new, 0.5 = full
+  const names = ['New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous',
+                 'Full Moon', 'Waning Gibbous', 'Last Quarter', 'Waning Crescent'];
+  const phase = names[Math.floor(cyc * 8 + 0.5) % 8];
+  const SHOWERS = [ // name, start [m, d], peak [m, d], end [m, d]
+    ['Quadrantids', [12, 28], [1, 3], [1, 12]], ['Lyrids', [4, 14], [4, 22], [4, 30]],
+    ['Eta Aquariids', [4, 19], [5, 5], [5, 28]], ['Delta Aquariids', [7, 12], [7, 30], [8, 23]],
+    ['Perseids', [7, 17], [8, 12], [8, 24]], ['Orionids', [10, 2], [10, 21], [11, 7]],
+    ['Leonids', [11, 6], [11, 17], [11, 30]], ['Geminids', [12, 4], [12, 13], [12, 20]],
+    ['Ursids', [12, 17], [12, 22], [12, 26]]];
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const doy = (m, d, y) => Math.floor((Date.UTC(y, m - 1, d) - Date.UTC(y, 0, 0)) / 864e5);
+  const y = now.getFullYear(), t = doy(now.getMonth() + 1, now.getDate(), y);
+  const fmt = md => MON[md[0] - 1] + ' ' + md[1];
+  const wins = [];
+  for (const [nm, s, p, e] of SHOWERS) {
+    for (const yy of [y - 1, y, y + 1]) {
+      let sd = doy(s[0], s[1], yy), ed = doy(e[0], e[1], yy), pd = doy(p[0], p[1], yy);
+      if (ed < sd) { // the window wraps the new year (quadrantids)
+        if (t >= sd) { ed += 366; pd += 366; }
+        else if (t <= ed) { sd -= 366; }
+      }
+      wins.push({nm, sd, pd, ed, smd: s, pmd: p});
+    }
+  }
+  let showerTxt = '';
+  const active = wins.filter(w => t >= w.sd && t <= w.ed)
+    .sort((a, b) => Math.abs(t - a.pd) - Math.abs(t - b.pd))[0];
+  if (active) {
+    showerTxt = t < active.pd ? active.nm + ' · peaks ' + fmt(active.pmd)
+      : t === active.pd ? active.nm + ' · peak tonight'
+      : active.nm + ' · peaked ' + fmt(active.pmd);
+  } else {
+    const next = wins.filter(w => w.sd > t).sort((a, b) => a.sd - b.sd)[0];
+    if (next) showerTxt = next.nm + ' begin ' + fmt(next.smd);
+  }
+  const parts = [phase, illum + '% lit'];
+  if (showerTxt) parts.push(showerTxt);
+  const line = parts.join(' · ');
+  const tn = document.getElementById('tonight');
+  if (tn) tn.textContent = 'tonight · ' + line;
+  const ht = document.getElementById('howtoTonight');
+  if (ht) ht.textContent = 'tonight — ' + line;
+})();
+/* the struggle detector: drag direction reversals and repeated
+   grabs with nothing to show for them, while the card is closed
+   and nothing has worked yet this visit. */
+let _rev = [], _starts = [], _succeeded = false;
+function resetStruggle() { _rev = []; _starts = []; }
+function noteSuccess() { _succeeded = true; helpBtn.classList.remove('glow'); resetStruggle(); }
+(function watchStruggle() {
+  let lastDx = 0, lastDy = 0, lx = null, ly = null, down = false;
+  canvas.addEventListener('pointerdown', e => {
+    down = true; lx = e.clientX; ly = e.clientY; lastDx = 0; lastDy = 0;
+    const now = performance.now();
+    _starts.push(now); _starts = _starts.filter(t0 => now - t0 < 25000);
+    if (!_succeeded && !howtoEl.classList.contains('show') && _starts.length >= 6)
+      helpBtn.classList.add('glow');
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!down || lx === null) return;
+    const dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY;
+    if (Math.abs(dx) > 4 && lastDx && Math.sign(dx) !== Math.sign(lastDx)) _rev.push(performance.now());
+    if (Math.abs(dy) > 4 && lastDy && Math.sign(dy) !== Math.sign(lastDy)) _rev.push(performance.now());
+    if (Math.abs(dx) > 4) lastDx = dx;
+    if (Math.abs(dy) > 4) lastDy = dy;
+    const now = performance.now();
+    _rev = _rev.filter(t0 => now - t0 < 6000);
+    if (!_succeeded && !howtoEl.classList.contains('show') && _rev.length >= 7)
+      helpBtn.classList.add('glow');
+  });
+  const up = () => { down = false; lx = null; };
+  canvas.addEventListener('pointerup', up);
+  canvas.addEventListener('pointercancel', up);
+})();
+
+/* 2D hit test on projected positions — reliable on every device */
+const _pv = new THREE.Vector3();
+function projectStar(st) {
+  _pv.copy(st.vec).project(camera);
+  st.sx = (_pv.x * 0.5 + 0.5) * W;
+  st.sy = (-_pv.y * 0.5 + 0.5) * H;
+  st.behind = _pv.z > 1;
+  return st;
+}
+function hitStar(px, py) {
+  let best = null, bestD = 1e9;
+  for (const st of contentStars) {
+    if (st.behind) continue;
+    const d = Math.hypot(px - st.sx, py - st.sy);
+    // generous catch radius (her call 2026-10-30: "clicking a star isn't
+    // easy") — nearest star within it wins, so dense clusters stay sane.
+    const rr = Math.max(MOB ? 38 : 26, st._screenR + (MOB ? 14 : 10));
+    if (d < rr && d < bestD) { best = st; bestD = d; }
+  }
+  return best;
+}
+function tapStar(s) {
+  noteSuccess(); // something opened — the help glow stands down
+  // one step: the tap opens the project directly — no zoom tier in between.
+  // the bayer designation rides along as a small detail line inside the panel.
+  const desig = s.d && s.d !== s.n ? s.n + ' · ' + s.d : null;
+  if (s.observer) openInterest('prachi', 'polaris · start here', desig);
+  else if (s.painting !== undefined) openLightbox(s.painting, desig);
+  else if (s.repo !== undefined) openRepo(s.repo, desig);
+  else if (s.about !== undefined) openAbout(s.about, desig);
+  else if (s.interest) openInterest(s.interest, s.f.cname.toLowerCase() + ' · ' + s.f.sub, desig);
+}
+
+/* ================= HTML label overlay, projected each frame ================= */
+const labelLayer = document.getElementById('labels');
+function starSubtitle(s) {
+  const v = starSubtitleText(s);
+  // a star whose word IS its constellation's word doesn't repeat it
+  // (round 30, from her leo screenshot: the caption said LEO ·
+  // geology and the label under regulus said geology again — the
+  // pair read as the same thing twice). the word belongs to the
+  // constellation; the star keeps its name. (hits exactly the four
+  // anchor stars: regulus, the fabric star, the jewelry star,
+  // arcturus — their panels ARE their figures' topics.)
+  return (v && s.f && v === s.f.sub) ? '' : v;
+}
+function starSubtitleText(s) {
+  // the element name, plain, under the star name whenever the label shows.
+  // (prachi's brief: no invented voice.) pleiades: the facet name;
+  // ursa major: the repo name; lyra: the painting title; polaris stays
+  // the observer. the bayer designation moved into the panel as a detail line.
+  if (s.interest) {
+    if (s.interest === 'prachi') return 'the observer';
+    if (s.interest === 'jewelry-tbd') return 'jewelry';
+    if (s.interest === 'hireme') return 'hire me';
+    if (s.interest === 'fabric') return 'fabric arts';
+    return s.interest;
+  }
+  if (s.repo !== undefined) return s.repo;
+  if (s.painting !== undefined) return PAINTINGS[s.painting].ptitle;
+  if (s.about !== undefined) return ABOUT[s.about].t;
+  return null;
+}
+const labelEls = new Map();
+function getLabel(s) {
+  let el = labelEls.get(s);
+  if (!el) {
+    el = document.createElement('div');
+    el.className = 'lbl';
+    const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = s.n;
+    nm.style.fontSize = (MOB ? 22 : 23) + 'px';
+    el.appendChild(nm);
+    el._nm = nm;
+    const th = starSubtitle(s);
+    if (th) { const t = document.createElement('div'); t.className = 'th'; t.textContent = th; el.appendChild(t); el._th = t; }
+    el.style.display = 'none'; // shown via wantShow (with fade) once placed
+    labelLayer.appendChild(el);
+    labelEls.set(s, el);
+  }
+  return el;
+}
+const capEls = new Map();
+const figTitleEl = document.getElementById('figtitle');
+function getCap(f) {
+  let el = capEls.get(f);
+  if (!el) {
+    el = document.createElement('div');
+    el.className = 'cap' + (f.bg ? ' dim' : '');
+    const cn = document.createElement('div'); cn.className = 'cn'; cn.textContent = f.cname;
+    const cs = document.createElement('div'); cs.className = 'cs'; cs.textContent = f.sub;
+    cs.style.fontSize = (MOB ? 15 : 16) + 'px';
+    el.appendChild(cn); el.appendChild(cs);
+    el.style.display = 'none'; // shown via wantShow (with fade) once placed
+    if (f.note && !MOB) {
+      const nt = document.createElement('div'); nt.className = 'dg';
+      nt.style.cssText = 'font-family:var(--mono);font-size:8px;letter-spacing:1px;color:rgba(245,234,214,.34);margin-top:3px';
+      nt.textContent = f.note;
+      el.appendChild(nt);
+    }
+    labelLayer.appendChild(el);
+    capEls.set(f, el);
+    // captions are click-through (pointer-events:none): a drag that starts
+    // on a caption must still grab the sky — caption blocks used to be dead
+    // zones where drags silently didn't start (found in calibration QA,
+    // 2026-10-16). Caption TAPS are handled by the canvas tap path in
+    // endPointer via labelBoxes: a star under the tap wins, else the tap
+    // flies to the figure, exactly as the old caption handlers did.
+  }
+  return el;
+}
+const labelBoxes = [];
+let labelsDirty = true;
+let lastTier = -1;
+let focusFig = null, lastFocusFig = undefined;
+let activeFitF = Infinity;
+let lastEffTier = -1;
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { labelsDirty = true; });
+addEventListener('resize', () => { labelsDirty = true; });
+function measureEl(el) {
+  if (labelsDirty || el._w === undefined) { el._w = el.offsetWidth; el._h = el.offsetHeight; }
+  return el;
+}
+function facingOK(dir, maxAng) { return dir.angleTo(view.dir) < maxAng; }
+function starPriority(st) {
+  if (st.observer) return 10;
+  if (st.interest) return 20;
+  if (st.repo !== undefined || st.painting !== undefined || st.about !== undefined) return 30;
+  return 40;
+}
+/* ---------- label visibility ----------
+   Positions are NOT stabilized or smoothed — they are projected from the
+   sky every frame (see updateLabels), fixed like the stars themselves.
+   What lives here is only the show/hide fading: time-based hysteresis so a
+   label sitting exactly on a visibility threshold doesn't flicker. */
+function showEl(el) {
+  if (el._shown) return;
+  el._shown = true;
+  if (el._hideT) { clearTimeout(el._hideT); el._hideT = null; }
+  el.style.display = 'block';
+  if (hardCutNow) { noTrans(el); el.style.opacity = '1'; return; }
+  el.style.opacity = '0';
+  void el.offsetWidth;
+  el.style.opacity = '1';
+}
+function hideEl(el) {
+  if (el._shown === false && el.style.display === 'none') return;
+  el._shown = false;
+  el._held = false; // placement stickiness (round 44) ends when a label hides
+  if (el._hideT) clearTimeout(el._hideT);
+  if (hardCutNow) {
+    noTrans(el);
+    el.style.opacity = '0';
+    el.style.display = 'none';
+    return;
+  }
+  el.style.opacity = '0';
+  el._hideT = setTimeout(() => { if (!el._shown) el.style.display = 'none'; }, 300);
+}
+const pendingFlips = new Set();
+function wantShow(el, want) {
+  // Hysteresis is time-based: a flip decided on one frame still applies
+  // after its delay even if later frames disagree. pumpFlips() in frame()
+  // applies pending flips every frame.
+  const shown = !!el._shown;
+  if (shown === want) { // already there: cancel any pending flip
+    if (el._pendWant !== undefined) { el._pendWant = undefined; pendingFlips.delete(el); }
+    // zombie guard: measurement forces display:block for layout; if the greedy
+    // then declined to place this label, _shown stays falsy but the element is
+    // left display:block. correct it here so nothing lingers visible.
+    if (!want && !shown && el.style.display !== 'none') {
+      el.style.display = 'none'; el.style.opacity = '0';
+    }
+    return;
+  }
+  if (el._pendWant !== want) { el._pendWant = want; el._pendT = performance.now(); pendingFlips.add(el); }
+}
+let hardCutNow = false, lastBand = '';
+const cutEls = new Set();
+function noTrans(el) {
+  el.style.transition = 'none';
+  cutEls.add(el);
+}
+function pumpFlips(now) {
+  if (!pendingFlips.size) return;
+  for (const el of pendingFlips) {
+    if (hardCutNow || now - el._pendT > 180) {
+      pendingFlips.delete(el);
+      const want = el._pendWant; el._pendWant = undefined;
+      if (!!el._shown !== want) { want ? showEl(el) : hideEl(el); }
+    }
+  }
+}
+function updateLabels() {
+  // FIXED IN THE SPHERE (her call 2026-10-15): every label is projected from
+  // its sky anchor every single frame, exactly like a star — no placement
+  // gate, no candidate anchors, no gliding. A label's screen position is a
+  // pure function of its star/figure position; the declutter may only hide
+  // a lower-priority label whose fixed rect collides, never move one.
+  labelBoxes.length = 0;
+  const fov = view.fov;
+  const maxAng = (fov * 0.72) * D2R;
+  // LOD tiers: 0 = captions + interest stars · 1 = same, nearer · 2 = + archive
+  // minors (repos / paintings). star labels always carry name + subtitle;
+  // there is no deeper text tier — tapping a star opens its panel directly.
+  // tiers (re-cut 2026-11-05, round 19): 0 = far (captions + interest
+  // stars only) · 1 = constellation view (every content star labeled,
+  // name + hobby subtitle — the old cut hid minors above fov 44 AND
+  // stripped subtitles below it, so a constellation landing showed
+  // neither) · 2 = deep cluster zoom only (fov < 20: name-only mini,
+  // the one case where full blocks physically cannot fit).
+  // ONE boundary between the two vocabularies (round 44, her call:
+  // "the label boundaries need stricter enforcement while zooming
+  // around — i saw the same constellation name bigger and small and
+  // star named [together]"). The split used to leak: captions from
+  // fov 44, tiers at 64, the star gate at 44 — three thresholds, and
+  // 180 ms of flip hysteresis plus a .28 s fade smeared every
+  // crossing into seconds of both layers at once. Now: LOD is the
+  // only line. At or above it, constellation captions own the sky
+  // and no star label shows (the focused figure's own stars keep
+  // theirs only at its true landing, fov <= fit x 1.1). Below it,
+  // captions are gone and star labels own the sky. Crossings are
+  // HARD CUTS — see hardCutNow below.
+  const LOD = 56;
+  const tier = fov >= LOD ? 0 : fov >= 20 ? 1 : 2;
+  if (tier !== lastTier) { lastTier = tier; labelsDirty = true; } // re-measure at the new LOD size
+  const zr = document.getElementById('zoomctl').getBoundingClientRect();
+  const topPad = MOB ? 140 : 92; // clear the header stack (title/wordmark + button + links)
+  // collision pads shrink with the tiers — a tight cluster's chain is
+  // only ~35px apart star-to-star.
+  let XM = tier === 2 ? 8 : tier === 1 ? 6 : 16, YM = tier === 2 ? 6 : tier === 1 ? 4 : 14;
+  // Greedy priority placement (Stellarium-style): highest priority places first;
+  // any label that would overlap an already-placed one is hidden, never stacked.
+  const placed = [];
+  const overlaps = (x, y, w, h) => {
+    for (const b of placed) {
+      if (Math.abs(x - b.x) < (w + b.w) / 2 + XM && Math.abs(y - b.y) < (h + b.h) / 2 + YM) return true;
+    }
+    return false;
+  };
+  const hitsChrome = (x, y, w, h, r) => !!r &&
+    x + w / 2 > r.left - 10 && x - w / 2 < r.right + 10 &&
+    y + h / 2 > r.top - 10 && y - h / 2 < r.bottom + 10;
+  const hitsBtn = (x, y, w, h) => hitsChrome(x, y, w, h, zr) ||
+    (howtoEl && howtoEl.classList.contains('show') &&
+      hitsChrome(x, y, w, h, howtoEl.getBoundingClientRect())) ||
+    (activeFig && hitsChrome(x, y, w, h, titleRect(activeFig)));
+  // labels route around the zoom buttons, the open how-to card,
+  // and (round 37) the centered title, so nothing ever hides
+  // behind the furniture.
+  // the zoomed-in title (round 20, her call): once you're IN a figure
+  // (fov < 64) and looking at its heart, its name + subheading leaves
+  // the sky and sits at the top of the screen like a title; that
+  // figure's in-sky caption stands down while the title is up.
+  let activeFig = null;
+  {
+    let best = Infinity, bf = null;
+    for (const f of FIGURES) {
+      const a = view.dir.angleTo(f.centroid);
+      if (a < best) { best = a; bf = f; }
+    }
+    if (bf) {
+      // the centered title is a claim — "you are looking at THIS
+      // constellation" (round 38, her phone screenshot: the
+      // PLEIADES title hung in empty sky while the cluster sat
+      // small at the bottom with a star label beside it — the
+      // constellation-and-star rule broken). the title now engages
+      // only when the view is truly AT the figure: centered within
+      // the figure's own span, and at its fitted zoom or deeper
+      // (exploring inside it keeps the title; passing by at a wide
+      // fov no longer triggers it). the old fov<64 rule's 24
+      // degrees of slack is gone, and with no title up the round-34
+      // gate keeps star labels out of the caption layer again.
+      if (bf._R === undefined) bf._R = Math.max(0, ...bf.stars.map(s => s.dir.angleTo(bf.centroid)));
+      const fitF = bf.stars.length <= 1 ? 26 : figureFit(bf).fov;
+      bf._fitF = fitF;
+      const centered = best <= Math.max(fitF * D2R * 0.18, bf._R * 1.15);
+      const zoomed = fov <= fitF * 1.35 || fov < 64;
+      if (centered && zoomed) activeFig = bf;
+    }
+  }
+  focusFig = activeFig;
+  activeFitF = activeFig ? (activeFig._fitF || Infinity) : Infinity;
+  // the landing band (round 44): a wide figure can land ABOVE the
+  // LOD line (ursa major fits at 63) — while its title is up and the
+  // view is at its true landing, its labels are the in-figure
+  // vocabulary and must use tier-1 metrics (mid size, tight pads),
+  // not the far view's roomy ones. Tier-0 pads + full-size minor
+  // labels emptied ursa major's landing entirely (7 of 8 hidden by
+  // the title rect, the edges and each other).
+  const effTier = (tier === 0 && activeFig && fov <= activeFitF * 1.1) ? 1 : tier;
+  if (effTier !== lastEffTier) { lastEffTier = effTier; labelsDirty = true; }
+  XM = effTier === 2 ? 8 : effTier === 1 ? 6 : 16;
+  YM = effTier === 2 ? 6 : effTier === 1 ? 4 : 14;
+  // a band change (tier crossed, focus gained/lost/moved) cuts
+  // hard: restore last cut's transitions, snap every label to its
+  // settled state, and let pumpFlips apply this frame's flips
+  // instantly — no layer ever half-fades across the line.
+  const band = tier + '|' + (activeFig ? activeFig.id : '-');
+  hardCutNow = band !== lastBand;
+  if (hardCutNow) {
+    lastBand = band;
+    for (const el of cutEls) el.style.transition = '';
+    cutEls.clear();
+    for (const el of [...labelEls.values(), ...capEls.values()]) {
+      if (el._shown) { noTrans(el); el.style.display = 'block'; el.style.opacity = '1'; }
+      else if (el.style.display !== 'none') {
+        noTrans(el);
+        if (el._hideT) { clearTimeout(el._hideT); el._hideT = null; }
+        el.style.opacity = '0'; el.style.display = 'none';
+      }
+    }
+  }
+  if (activeFig !== lastFocusFig) {
+    lastFocusFig = activeFig;
+    for (const f of FIGURES) {
+      const lk = activeFig && f !== activeFig ? 0.22 : 1;
+      (f._lineMats || []).forEach(m => { m.opacity = m.userData.baseOp * lk; });
+    }
+  }
+  // ---- figure captions first (highest priority): glued name+subtitle blocks ----
+  for (const f of FIGURES) {
+    const el = capEls.get(f);
+    if (f === activeFig) { if (el) wantShow(el, false); continue; }
+    if (activeFig) { if (el) wantShow(el, false); continue; } // another figure holds the focus: its caption is not "on" either
+    const capVec = f.capDir || f.centroid;
+    _pv.copy(capVec).multiplyScalar(R_SKY).project(camera);
+    const behind = _pv.z > 1;
+    const x = (_pv.x * 0.5 + 0.5) * W, y = (-_pv.y * 0.5 + 0.5) * H;
+    const show = !behind && facingOK(capVec, maxAng * 0.9) &&
+      x > -80 && x < W + 80 && y > 60 && y < H - 60 &&
+      fov >= LOD && (fov < 64 || !f.bg);
+    // captions belong to the zoomed-out tiers: tier 0 = figures only,
+    // tier 1 = + dim neighbors; at full detail (tier 2) the star labels carry it
+    if (!show) { if (el) wantShow(el, false); continue; }
+    const c = getCap(f);
+    if (c.style.display === 'none') { c.style.display = 'block'; c.style.opacity = '0'; } // measurable while faded
+    measureEl(c);
+    const w = c._w + 44, h = c._h; // display caps paint ~44px past advance widths
+    // PINNED to the figure (repair 2026-10-13, her words: "the constellation
+    // name should be over the constellation and fixed in the sky over the
+    // constellation"). The caption sits exactly at the projected centroid and
+    // moves with the sky — no declutter nudging, no star avoidance. If the
+    // home block doesn't fit (off-screen, under the header chrome, or
+    // colliding with an already-placed caption / the return button) it fades
+    // out, astronomy-app style. Never shoved elsewhere.
+    const fits = x - w / 2 >= 6 && x + w / 2 <= W - 6 &&
+      y - h / 2 >= topPad && y + h / 2 <= H - 118 &&
+      !overlaps(x, y, w, h) && !hitsBtn(x, y, w, h);
+    if (!fits) { wantShow(c, false); continue; } // can't fit at home: hide, don't move
+    c.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-50%)`;
+    wantShow(c, true);
+    placed.push({x, y, w, h});
+    labelBoxes.push({x: x - w / 2, y: y - h / 2, w, h, n: 'cap:' + f.id});
+  }
+  if (figTitleEl) {
+    if (activeFig) {
+      if (figTitleEl._fig !== activeFig) {
+        figTitleEl._fig = activeFig;
+        figTitleEl.querySelector('.ft-nm').textContent = activeFig.cname;
+        figTitleEl.querySelector('.ft-th').textContent = activeFig.sub;
+      }
+      figTitleEl.classList.add('show');
+      document.body.classList.add('figzoom');
+    } else {
+      figTitleEl._fig = null;
+      figTitleEl.classList.remove('show');
+      document.body.classList.remove('figzoom');
+    }
+  }
+  window.__activeFig = activeFig ? activeFig.id : null;
+  // ---- star labels: sort by (priority, magnitude), place or hide ----
+  const items = [];
+  for (const st of contentStars) {
+    const el0 = labelEls.get(st);
+    const isMinor = st.repo !== undefined || st.painting !== undefined || st.about !== undefined;
+    // polaris carries no name label — the "prachi patel / the observer" tag
+    // is gone (her call 2026-10-15). the star stays, ringed and tappable.
+    const labeled = (st.interest || isMinor) && !st.observer;
+    let show = labeled && !st.behind && facingOK(st.dir, maxAng);
+    if (show && tier >= 1 && activeFig && st.f !== activeFig) show = false; // not "on" while another figure holds the focus (round 23)
+    if (show && tier < 1 && isMinor && !(activeFig && st.f === activeFig)) show = false; // minors stay home at the far view only — except the focused figure's own, which ARE its landing (round 44: the tier line moved to 56 and ursa major lands at 63, all repo stars; the blanket rule emptied its landing)
+    // one vocabulary at a time (round 34, her call: "stars should
+    // not be visible when constellations are — it creates
+    // confusion"): while the caption layer is up (fov >= 44), a
+    // star label floats in the same display type as the
+    // constellation names and impersonates one (her screenshot: a
+    // lone "Schedar" beside PEGASUS, cassiopeia's own caption
+    // nowhere). star labels belong to the focused figure (its
+    // title is up, one constellation owns the screen) or to the
+    // deeper view where captions have gone home.
+    if (show && fov >= LOD && !(activeFig && st.f === activeFig && fov <= activeFitF * 1.1)) show = false;
+    if (!show) { if (el0) wantShow(el0, false); continue; }
+    const el = getLabel(st);
+    // deep zoom (tier 2): name-only labels. name+subtitle blocks are
+    // ~116×43px — in a tight cluster (the pleiades landing) the greedy
+    // placer could only fit 2 of 9; names alone are ~half the height and
+    // the whole figure can carry its captions (her ask, 2026-11-03).
+    el.classList.toggle('mini', effTier === 2);
+    el.classList.toggle('mid', effTier === 1 && isMinor);
+    if (el.style.display === 'none') { el.style.display = 'block'; el.style.opacity = '0'; } // measurable while faded
+    const m = measureEl(el);
+    const w = m._w + 26, h = m._h; // script swashes paint past their advance widths
+    items.push({st, el, w, h, pri: starPriority(st), mag: st.mag === undefined ? 9 : st.mag});
+  }
+  items.sort((a, b) => a.pri - b.pri || a.mag - b.mag);
+  // ONE fixed anchor per star: the label hangs directly under its star, the
+  // way a name sits under a star in an atlas, and is projected fresh every
+  // frame — it cannot drift, glide, or flip sides. If that one fixed rect
+  // runs off the safe area, under the return button, or into an
+  // already-placed label, the label hides for as long as that's true.
+  // (round 20, her call: NO swung anchors at the constellation tier —
+  // the round-19 bearing-walk rescue put labels beside/above their
+  // stars and she flagged it: "labels are not situated directly under
+  // their star". Position over presence: fitFovFor now frames the
+  // below-labels when it picks a constellation landing, and a label
+  // whose below-rect still collides hides. The deep tier keeps its
+  // spokes — a 3° cluster cannot hang nine labels under nine stars
+  // 14px apart.)
+  for (const it of items) {
+    // directly under (round 20): the gap is the sprite's RADIUS + 10 —
+    // _screenR is the sprite's full on-screen diameter despite its
+    // name, and the old anchor spent a whole diameter, floating the
+    // label a star-height below its star and stacking neighbours'
+    // labels into each other (dubhe's label sat on merak's star).
+    let x = it.st.sx, y = it.st.sy + (it.st._screenR || 12) / 2 + 10 + it.h / 2;
+    if (tier === 2) {
+      // spokes at the deep tier (2026-11-03): away-from-centroid anchor,
+      // rotated by anchorFit only as far as needed to stay on screen.
+      let bx = 0, by = 1, d = (it.st._screenR || 12) + 10 + it.h / 2;
+      if (it.st.f) {
+        _pv.copy(it.st.f.centroid).multiplyScalar(R_SKY).project(camera);
+        const ccx = (_pv.x * 0.5 + 0.5) * W, ccy = (-_pv.y * 0.5 + 0.5) * H;
+        const dv = deepDir(it.st.sx, it.st.sy, ccx, ccy, it.w, it.h, it.st._screenR,
+          ccx > -80 && ccx < W + 80 && ccy > -80 && ccy < H + 80);
+        if (dv) { bx = dv.bx; by = dv.by; d = dv.d; }
+      }
+      const c = anchorFit(it.st.sx, it.st.sy, bx, by, d, it.w, it.h,
+        {l: 4, r: W - 4, t: topPad, b: H - 118});
+      x = c.x; y = c.y;
+    }
+    // placement stickiness (round 44): a label that holds a rect
+    // keeps it under a shrunken test (pulse and micro-drift can't
+    // flick it out); a label trying to enter needs extra clearance.
+    // Boundaries stay strict AND still — no breathing at the line.
+    const gw = it.el._held ? -6 : 4;
+    const fitsAt = (fx, fy) => fx - (it.w + gw) / 2 >= 4 && fx + (it.w + gw) / 2 <= W - 4 &&
+      fy - (it.h + gw) / 2 >= topPad && fy + (it.h + gw) / 2 <= H - 118 &&
+      !hitsBtn(fx, fy, it.w + gw, it.h + gw) && !overlaps(fx, fy, it.w + gw, it.h + gw);
+    const fits = fitsAt(x, y);
+    if (!fits) { wantShow(it.el, false); continue; }
+    it.el._held = true;
+    it.el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-50%)`;
+    wantShow(it.el, true);
+    placed.push({x, y, w: it.w, h: it.h});
+    labelBoxes.push({x: x - it.w / 2, y: y - it.h / 2, w: it.w, h: it.h, n: it.st.n});
+  }
+  window.__labelBoxes = labelBoxes;
+}
+
+/* ================= panels ================= */
+const panel = document.getElementById('panel');
+const pEyebrow = document.getElementById('panelEyebrow');
+const pTitle = document.getElementById('panelTitle');
+const pBody = document.getElementById('panelBody');
+let openId = null;
+
+function repoCard(r) {
+  return `<div class="repo">
+    <div class="repo-top"><span class="repo-name"><span class="at">@</span>${r.name}</span>
+    <span class="repo-lang"><span class="dot" style="background:${LANGC[r.lang]}"></span>${r.lang}</span></div>
+    <p>${r.blurb}</p>
+    <div class="repo-links"><a href="https://github.com/PrachiDPatel/${r.gh}">github ↗</a>${r.live ? `<a href="${r.live}">live ↗</a>` : ''}</div>
+  </div>`;
+}
+function linksHTML(list) {
+  return `<div class="plinks">${list.map(l =>
+    `<a href="${l.url}"><span class="n">${l.n}</span><span class="h">${l.h}</span></a>`).join('')}</div>`;
+}
+function showPanel(eyebrow, title, html, id) {
+  pEyebrow.textContent = eyebrow;
+  pTitle.textContent = title;
+  pBody.innerHTML = html;
+  pBody.scrollTop = 0;
+  panel.hidden = false;
+  requestAnimationFrame(() => panel.classList.add('open'));
+  openId = id;
+}
+function openInterest(key, eyebrow, desig) {
+  const n = INTERESTS[key];
+  let html = desig ? `<p class="desig">${desig}</p>` : '';
+  html += `<p class="lede">${n.lede}</p>`;
+  if (key === 'prachi') {
+    // polaris is where the sky starts, so polaris holds the menu
+    // of constellations (round 39, her call) — nearest first, so
+    // the figures around the pole (hire me, tech projects, her
+    // best art) top the list, matching their places in the sky.
+    const pole = FIGURES[0].centroid;
+    const others = FIGURES.filter(f => f.id !== 'umi')
+      .map(f => ({f, d: f.centroid.angleTo(pole)}))
+      .sort((a, b) => a.d - b.d).map(x => x.f);
+    html += `<div class="plinks">` + others.map(f =>
+      `<a href="#" data-fly="${f.id}"><span class="n">${f.cname}</span><span class="h">${f.sub}</span></a>`).join('') + `</div>`;
+  }
+  if (n.more) html += `<p class="more">${n.more}</p>`;
+  if (n.kind === 'links') html += linksHTML(n.links);
+  if (n.kind === 'contacts') {
+    html += `<div class="facts">${n.facts.map(f => `<div class="fact"><span class="k">${f[0]}</span><span class="v">${f[1]}</span></div>`).join('')}</div>`;
+    html += linksHTML(CONTACTS);
+  }
+  showPanel(eyebrow, n.title, html, 'interest-' + key);
+}
+function openAbout(key, desig) {
+  const a = ABOUT[key];
+  const html = (desig ? `<p class="desig">${desig}</p>` : '') + `<p class="lede">${a.lede}</p>`;
+  showPanel('pleiades · about me', a.title, html, 'about-' + key);
+}
+function openRepo(gh, desig) {
+  const r = REPOS.find(r => r.gh === gh);
+  if (!r) return;
+  showPanel('ursa major · eight repositories', r.name,
+    (desig ? `<p class="desig">${desig}</p>` : '') + repoCard(r), 'repo-' + gh);
+}
+function closePanel() {
+  panel.classList.remove('open');
+  openId = null;
+  setTimeout(() => { if (!openId) panel.hidden = true; }, 480);
+}
+document.getElementById('panelClose').addEventListener('click', closePanel);
+/* constellation menu rows (the polaris panel) fly the sky */
+pBody.addEventListener('click', e => {
+  const a = e.target.closest('[data-fly]');
+  if (!a) return;
+  e.preventDefault();
+  closePanel();
+  flyTo(a.dataset.fly);
+});
+
+const logpanel = document.getElementById('logpanel');
+let logOpen = false;
+function openLog() {
+  logpanel.hidden = false;
+  requestAnimationFrame(() => logpanel.classList.add('open'));
+  logOpen = true;
+}
+function closeLog() {
+  logpanel.classList.remove('open');
+  logOpen = false;
+  setTimeout(() => { if (!logOpen) logpanel.hidden = true; }, 480);
+}
+/* (logbtn removed, round 26) */
+document.getElementById('logClose').addEventListener('click', closeLog);
+
+addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (lb.classList.contains('open')) closeLightbox();
+    else if (logOpen) closeLog();
+    else if (menuOpen) closeMenu();
+    else closePanel();
+  }
+});
+
+/* lightbox */
+const lb = document.getElementById('lightbox');
+const lbImg = document.getElementById('lbImg');
+const lbCap = document.getElementById('lbCap');
+function openLightbox(i, desig) {
+  const p = PAINTINGS[i];
+  lbImg.src = 'art/' + p.f; lbImg.alt = p.alt;
+  lbCap.textContent = (desig ? desig + ' — ' : '') + p.latin;
+  lb.classList.add('open');
+}
+function closeLightbox() { lb.classList.remove('open'); }
+document.getElementById('lbClose').addEventListener('click', closeLightbox);
+lb.addEventListener('click', e => { if (e.target === lb) closeLightbox(); });
+
+/* a11y star list */
+const sr = document.querySelector('nav.sr');
+function srButton(label, fn) {
+  const b = document.createElement('button');
+  b.textContent = label;
+  b.addEventListener('click', fn);
+  sr.appendChild(b);
+}
+srButton('fly to polaris, start here', () => flyTo('polaris'));
+srButton('fly to about me, the pleiades', () => flyTo('ple'));
+srButton('fly to digital art, lyra', () => flyTo('lyr'));
+srButton('fly to fabric arts, cassiopeia', () => flyTo('cas'));
+srButton('fly to jewelry, orion', () => flyTo('ori'));
+srButton('fly to photography, aquila', () => flyTo('aql'));
+srButton('fly to geology, leo', () => flyTo('leo'));
+srButton('fly to hire me, boötes', () => flyTo('boo'));
+srButton('fly to writing, pegasus', () => flyTo('peg'));
+srButton('fly to tech projects, the big dipper', () => flyTo('dipper'));
+
+/* ================= intro + main loop ================= */
+addEventListener('resize', () => {
+  W = innerWidth; H = innerHeight;
+  camera.aspect = W / H;
+  camera.updateProjectionMatrix();
+  renderer.setSize(W, H);
+});
+const bootT = performance.now() / 1000;
+applyView();
+// opening sweep: start wide over the dipper's meridian, rise north to polaris
+if (!RM) {
+  fly = {ra0: wrapRa(HOME.ra + 55), dec0: 58, dRa: -55,
+         dec1: HOME.dec, f0: 112, f1: HOME.fov, up0: HOME.up.clone(), up1: HOME.up.clone(),
+         t0: performance.now(), dur: 2800, done: null};
+  view.ra = fly.ra0; view.dec = fly.dec0; view.fov = 112; syncDir(); applyView();
+}
+const clockT0 = performance.now();
+let lastFrame = performance.now();
+
+function frame() {
+  requestAnimationFrame(frame);
+  const now = performance.now();
+  const dt = Math.min(0.1, (now - lastFrame) / 1000);
+  lastFrame = now;
+  const t = (now - clockT0) / 1000;
+  const introT = now / 1000 - bootT;
+
+  if (fly) {
+    const p = Math.min(1, (now - fly.t0) / fly.dur);
+    const e = p < 0.5 ? 4*p*p*p : 1 - Math.pow(-2*p + 2, 3) / 2;
+    view.ra = wrapRa(fly.ra0 + fly.dRa * e);
+    view.dec = fly.dec0 + (fly.dec1 - fly.dec0) * e;
+    view.fov = fly.f0 + (fly.f1 - fly.f0) * e;
+    view.up.copy(fly.up0).lerp(fly.up1, e);
+    syncDir();
+    applyView();
+    if (p >= 1) { const d = fly.done; fly = null; updateBackbtn(); if (d) d(); }
+  } else {
+    // no idle spin — the sphere sits still at rest; drag is 1:1.
+    // gentle momentum after release, strongly damped so it always settles.
+    idleT += dt;
+    if (!downAt && pointers.size === 0) {
+      const sp = Math.hypot(vel.x, vel.y);
+      if (sp > 0.5) {
+        const step = Math.min(dt, 0.05) * 60;
+        rotateView(vel.x * step, vel.y * step);
+        const d = Math.exp(-5.5 * dt); // strong damping: glides, always settles fast
+        vel.x *= d; vel.y *= d;
+        updateBackbtn();
+      } else { vel.x = 0; vel.y = 0; }
+    }
+  }
+
+  // star draw-in + twinkle.
+  // zoom compensation: hero stars stay bold at the far view (the whole point)
+  // but shrink toward constant screen size as you dive in, so tight clusters
+  // like the pleiades stay distinct instead of merging into one blob.
+  const zk = Math.min(1.6, Math.max(0.08,
+    Math.pow(Math.tan(view.fov * 0.5 * D2R) / Math.tan(25 * D2R), 1.2)));
+  // (round 40, her call: "star sizes dynamically need to change
+  // with zoom — appropriate at every level." the exponent was 2.0,
+  // which squared the zoom ratio and starved the constellation
+  // landings: at cassiopeia's fov 33 the factor fell to 0.40 and
+  // her stars rendered ~11px beside a 2.2rem title — "so faint
+  // compared to the constellation name." 1.2 keeps the compensation
+  // (deep zoom still hands off to the px caps, the far view still
+  // clamps) while the mid-zooms hold their presence.)
+  // deep-zoom screen-size cap (2026-11-03): zk saturates at 0.08 below
+  // fov ~13, so at a tight-cluster landing (pleiades fov ~3.4) the raw
+  // sprites ballooned to ~150px and merged into a column of light. Cap
+  // the ON-SCREEN diameter instead: heroes 76px, standard stars 46px
+  // (round 22: down from 84/60 — the caps were the effective size of
+  // the whole sky and the stars blazed instead of blending).
+  const pxPerWorldNow = (H / 2) / (Math.tan(view.fov * 0.5 * D2R) * R_SKY);
+  for (const st of contentStars) {
+    const k = RM ? 1 : Math.min(1, Math.max(0, (introT - st._delay) / 0.9));
+    // soft twinkle (round 23, her call): a gentle swell, not a blink.
+    const tw = RM ? 1 : 0.82 + 0.18 * Math.sin(t * (1.15 + 0.55 * ((st._phase * 3.7) % 1)) + st._phase * 1.3);
+    // focus (round 23, her call): when one constellation is the
+    // focus, the rest are not "on" — they fall to a quarter light.
+    const dimK = focusFig && st.f !== focusFig ? 0.22 : 1;
+    st.sprite.material.opacity = k * st.baseAlpha * tw * dimK;
+    // the focused constellation carries extra presence (round 40):
+    // a size lift and higher px caps, so its stars read as the
+    // subject — distinct from the photo's baked field and from the
+    // dimmed figures around it.
+    const foc = focusFig && st.f === focusFig;
+    const sRaw = Math.max(0.001, st.baseScale * (0.35 + 0.65 * k) * zk) * (foc ? 1.25 : 1);
+    const capPx = (st.hero ? 76 : 46) + (foc ? 16 : 0);
+    // THE PLEIADES LACE (round 33, her call — special case): at
+    // constellation distances the nine sisters stand ~15px apart
+    // on screen while each carries a full hero sprite and a 2.8x
+    // glitter bloom; nine additive blooms in a 15px span merge
+    // into one giant glowing orb (her screenshot). the cluster is
+    // lace, not a lamp: small delicate DISTINCT stars. so as the
+    // view widens past fov 25 the pleiades progressively shed
+    // size, pulse and glitter (fully laced by fov 55); flying in,
+    // the lace blooms back into the full rich treatment, and at
+    // the landing (fov ~3.4) nothing here applies at all.
+    const lace = st.f.id === 'ple' ? Math.min(1, Math.max(0, (view.fov - 25) / 30)) : 0;
+    let sCap0 = Math.min(sRaw, capPx / pxPerWorldNow);
+    // presence floor for the focused figure (round 40): the mag
+    // law's floor-clamped standard stars (caph, mag 2.29) still
+    // rendered ~12px at cassiopeia's landing while its heroes
+    // blazed at ~38 — an uneven figure. every star of the focused
+    // constellation now reads at least ~19px at any landing; the
+    // lace still multiplies afterward, so the pleiades at distance
+    // stay lace.
+    if (foc) sCap0 = Math.max(sCap0, 19 / pxPerWorldNow);
+    const sCap = sCap0 * (1 - 0.55 * lace);
+    // ethereal pulse (round 20, her call: "glowy/pulse"): a slow
+    // breath on the sprite scale, each star on its own phase. applied
+    // after the cap so capped stars still breathe. (the lace calms
+    // the pulse too — a merged shimmer must not throb.)
+    const spulse = RM ? 1 : 1 + 0.20 * (1 - 0.7 * lace) * Math.sin(t * (0.9 + 0.5 * ((st._phase * 7) % 1)) + st._phase * 1.7);
+    const s = sCap * spulse;
+    st.sprite.scale.set(s, s, 1);
+    // labels anchor to the UNPULSED diameter: a breathing anchor would
+    // bob every label ±2px and flicker borderline placements in and
+    // out on the pulse cycle (round 20 QA).
+    st._labelR = sCap * pxPerWorldNow;
+    if (st.rings) for (const r of st.rings) {
+      const ru = r.userData.ring;
+      r.material.opacity = k * ru.op * (RM ? 1 : 0.85 + 0.15 * Math.sin(t * 1.1 + st._phase));
+      if (ru.spin && !RM) r.material.rotation += dt * 0.25;
+      const pulse = RM ? 1 : 1 + 0.05 * Math.sin(t * 1.3 + st._phase);
+      const rs = ru.base * pulse * (sCap / sRaw);
+      r.scale.set(rs, rs, 1);
+    }
+    if (st.glow) {
+      // the glitter breathes on its own slower phase, offset from the
+      // body's twinkle so the two never peak together — that's what
+      // makes it read as shimmer rather than pulsing.
+      const gw = (RM ? 0.2 : 0.15 + 0.17 * (0.5 + 0.5 * Math.sin(t * 0.7 + st._phase * 2.3))) * (1 - 0.78 * lace); // touched down round 35 (was .24 + .24): shimmer, not bloom
+      st.glow.material.opacity = k * dimK * gw;
+      // the glow's reach tightens as you zoom in (round 26, her
+      // call from the pleiades: at deep zoom the 2.8x halo turned
+      // the stars into cotton balls — "hard to see, make more
+      // dynamic shapes"). far out it blooms; up close it hugs the
+      // star so the sparkle's shape carries. (the round-33 lace
+      // shrinks it further still at distance — the glitter is the
+      // main orb-maker.)
+      const gm2 = 1.45 + 0.8 * Math.min(1, Math.max(0, (view.fov - 3) / 27)); // reach touched down round 35 (was 1.7 + 1.1)
+      const gsc = s * gm2 * (1 - 0.72 * lace);
+      st.glow.scale.set(gsc, gsc, 1);
+    }
+  }
+  for (const g of glows) {
+    g.material.opacity = g.userData.glow.op * Math.min(1, Math.max(0, introT / 2));
+  }
+
+  // shooting star: the head rides the arc; the sprite's center
+  // trails half a streak-length behind it, aimed each frame along
+  // the path's projected (screen) direction.
+  if (!RM) {
+    shooter.next -= dt;
+    if (!shooter.active && shooter.next <= 0) spawnShooter(view.dir);
+    if (shooter.active) {
+      shooter.t += dt;
+      const p = shooter.t / shooter.dur;
+      if (p >= 1) { shooter.active = false; shooter.sp.visible = false; }
+      else {
+        _sv.lerpVectors(shooter.from, shooter.to, p); // the head
+        _sv2.copy(shooter.to).sub(shooter.from).normalize();
+        shooter.sp.position.copy(_sv).addScaledVector(_sv2, -shooter.sp.scale.x / 2.1);
+        _pv.copy(_sv).project(camera);
+        const hx = _pv.x, hy = _pv.y;
+        _pv.copy(_sv).addScaledVector(_sv2, -2).project(camera);
+        shooter.sp.material.rotation = Math.atan2(hy - _pv.y, hx - _pv.x);
+        shooter.sp.material.opacity = 0.92 * Math.sin(p * Math.PI);
+      }
+    }
+  }
+
+  // project content stars for hit-testing (stars sit ~R_SKY from camera)
+  const pxPerWorld = (H / 2) / (Math.tan(view.fov * 0.5 * D2R) * R_SKY);
+  for (const st of contentStars) {
+    projectStar(st);
+    st._screenR = st._labelR !== undefined ? st._labelR : st.sprite.scale.x * pxPerWorld;
+  }
+
+  // hybrid sky: the photo holds the far view; past fov ~40 the painted
+  // sky crossfades in — deep zoom is fully drawn, sharp at any level.
+  // at the far view the photo's gritty star noise is softened ~30% (the smooth
+  // painted sky shows through) so her drawn hero stars own the view.
+  if (photoMat) {
+    const hk = Math.min(1, Math.max(0, (40 - view.fov) / 22));
+    const farK = Math.min(1, Math.max(0, (view.fov - 40) / 48));
+    photoMat.opacity = (1 - hk * hk * (3 - 2 * hk)) * (1 - 0.30 * farK);
+  }
+
+  renderer.render(scene, camera);
+  if (!window.__bootFramed && (window.__texApplied || window.__texFailed)) {
+    window.__bootFramed = 1; if (window.BOOT) BOOT.done('frame');
+  }
+  updateLabels();
+  pumpFlips(now);
+  labelsDirty = false;
+}
+frame();
+
+/* QA hooks */
+window.__qa = {
+  labelBoxes: () => labelBoxes.map(b => ({...b})),
+  flyTo, view, contentStars, applyView,
+  starCount: contentStars.length,
+  dbgVel: () => ({...vel}), dbgPointers: () => pointers.size, dbgDown: () => !!downAt,
+  projectStar: (n) => { const s = contentStars.find(s => s.n === n); return s ? projectStar(s) : null; },
+  forceShooter: () => spawnShooter(view.dir),
+  shooterState: () => ({active: shooter.active, t: +shooter.t.toFixed(2),
+    opacity: +shooter.sp.material.opacity.toFixed(2), rot: +shooter.sp.material.rotation.toFixed(2),
+    sx: +shooter.sp.scale.x.toFixed(1), visible: shooter.sp.visible}),
+  fit: (id) => { const f = FIGURES.find(f => f.id === id); if (!f) return null;
+    const L = figureFit(f); return {fov: L.fov, off: L.dir.angleTo(f.centroid) * 57.3}; },
+  tonightText: () => (document.getElementById('tonight') || {}).textContent || '',
+  bootState: () => window.BOOT ? BOOT.state() : null,
+  bootPin: (f, snap) => { if (window.BOOT) BOOT.pin(f, snap); },
+};
+// URL-driven QA states: ?view=dipper|pleiades|polaris|home  ?audit=1 writes label boxes to title
+const QP = new URLSearchParams(location.search);
+if (QP.get('view')) setTimeout(() => flyTo(QP.get('view')), 3400);
+if (QP.get('audit')) setTimeout(() => { document.title = 'AUDIT:' + JSON.stringify(labelBoxes); }, 10500);
+</script>
+</body>
+</html>
